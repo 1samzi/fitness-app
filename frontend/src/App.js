@@ -7,6 +7,8 @@ import Home from './components/Home'
 import Dashboard from './components/Dashboard'
 import NutritionForm from './components/Food/NutritionForm'
 import Exercise from './components/Exercise/Exercise'
+import Profile from './components/Profile/Profile'
+import Setting from './components/Profile/Setting'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
@@ -35,6 +37,8 @@ function App() {
             <Route path='/dashboard' element={<Dashboard/>} />
             <Route path='/nutrition-form' element={<NutritionForm/>} />
             <Route path='/exercise' element={<Exercise/>} />
+            <Route path='/profile' element={<Profile />} />
+            <Route path='/setting' element={<Setting />} />
           </Routes>
         </Box>
       </Router>

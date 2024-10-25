@@ -261,7 +261,12 @@ function Register() {
                             Register
                         </Button>
                         <Text>
-                            Already have an account? <Link to="/login" color="blue.500">Login</Link>
+                            Already have an account? 
+                            <Link to="/login">
+                                <span className='about-link-text'>
+                                     Login
+                                </span>
+                            </Link>
                         </Text>
                     </VStack>
                 </form>

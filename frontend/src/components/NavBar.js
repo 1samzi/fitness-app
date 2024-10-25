@@ -10,7 +10,7 @@ import {
     Text,
 } from '@chakra-ui/react'
 import { Menu as MenuIcon, X } from 'lucide-react'
-import ProfileMenu from './ProfileMenu'
+import ProfileMenu from './Profile/ProfileMenu'
 import { useNavigate } from 'react-router-dom'
 
 const Links = [

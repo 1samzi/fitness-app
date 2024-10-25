@@ -8,11 +8,26 @@ import {
   MenuItem,
   MenuDivider,
   IconButton,
+  Button,
 } from '@chakra-ui/react'
 import { MoreVertical } from 'lucide-react'
-import { useNavigation } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 function ProfileMenu() {
+  const navigate = useNavigate()
+
+  const onSignOutClick = () => {
+    navigate('/login')
+  }
+
+  const onProfileClick = () => {
+    navigate('/profile')
+  }
+
+  const onSettingClick = () => {
+    navigate('/setting')
+  }
+
   return (
     <Flex alignItems={'center'} gap={2}>
       <Avatar
@@ -30,10 +45,10 @@ function ProfileMenu() {
           size={'sm'}
         />
         <MenuList>
-          <MenuItem>Profile</MenuItem>
-          <MenuItem>Settings</MenuItem>
+          <MenuItem onClick={onProfileClick}>Profile</MenuItem>
+          <MenuItem onClick={onSettingClick}>Settings</MenuItem>
           <MenuDivider />
-          <MenuItem >Sign out</MenuItem>
+          <MenuItem onClick={onSignOutClick}>Sign out</MenuItem>
         </MenuList>
       </Menu>
     </Flex>
