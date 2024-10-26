@@ -9,6 +9,10 @@ import NutritionForm from './components/Food/NutritionForm'
 import Exercise from './components/Exercise/Exercise'
 import Profile from './components/Profile/Profile'
 import Setting from './components/Profile/Setting'
+import ForgotPassword from './components/ForgotPassword'
+import TwoFactorAuth from './components/Admin/TwoFactorAuth'
+import AdminHome from './components/Admin/AdminHome'
+import UserActivity from './components/Admin/UserActivity'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false)
@@ -39,6 +43,10 @@ function App() {
             <Route path='/exercise' element={<Exercise/>} />
             <Route path='/profile' element={<Profile />} />
             <Route path='/setting' element={<Setting />} />
+            <Route path='/forgot-password' element={<ForgotPassword /> } />
+            <Route path='/two-factor-auth' element={<TwoFactorAuth /> } />
+            <Route path='/admin-home' element={<AdminHome />} />
+            <Route path='/user-activity' element={<UserActivity />} />
           </Routes>
         </Box>
       </Router>

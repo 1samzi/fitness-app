@@ -71,6 +71,7 @@ function Login() {
             })
         }
         navigate('/home')
+        // navigate('/two-factor-auth')
     }
 
     return (
@@ -118,6 +119,9 @@ function Login() {
                 <Text mt={4} textAlign="center">
                     Don't have an account?{' '}
                     <Link to="/register" color="blue.500">Register here</Link>
+                </Text>
+                <Text mt={3} textAlign="center">
+                    <Link to="/forgot-password" color="blue.500">Forgot Password?</Link>
                 </Text>
             </Box>
         </Container>
