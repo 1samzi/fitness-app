@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import {
     Box,
     Button,
@@ -17,7 +17,6 @@ import {
 } from '@chakra-ui/react'
 import { Link, useNavigate } from 'react-router-dom'
 
-
 function Login() {
     const [show, setShow] = useState(false)
     const [email, setEmail] = useState('')
@@ -26,6 +25,7 @@ function Login() {
     const [passwordError, setPasswordError] = useState('')
     const toast = useToast()
     const navigate = useNavigate()
+    const toastIdRef = useRef()
 
     const handleClick = () => setShow(!show)
 
@@ -56,21 +56,69 @@ function Login() {
         return true
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         const isEmailValid = validateEmail(email)
         const isPasswordValid = validatePassword(password)
+
         if (isEmailValid && isPasswordValid) {
-            // Perform login logic here
-            toast({
+            toastIdRef.current = toast({
                 title: "Login Attempt",
                 description: "Attempting to log in...",
                 status: "info",
-                duration: 2000,
+                duration: null,
+                isClosable: false,
+            })
+
+            try {
+                const response = await fetch('http://localhost:3001/api/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                })
+
+                if (toast.isActive(toastIdRef.current)) {
+                    toast.close(toastIdRef.current)
+                }
+
+                if (response.ok) {
+                    const data = await response.json()
+                    toast({
+                        title: "Login Successful",
+                        description: "You have successfully logged in.",
+                        status: "success",
+                        duration: 3000,
+                        isClosable: true,
+                    })
+                    if (data.data.userData.userType == "admin") {
+                        navigate('/two-factor-auth')
+                    } else {
+                        navigate('/home')
+                    }
+                } else {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Login failed')
+                }
+            } catch (error) {
+                toast({
+                    title: "Login Failed",
+                    description: error.message || "An error occurred during login.",
+                    status: "error",
+                    duration: 3000,
+                    isClosable: true,
+                })
+            }
+        } else {
+            toast({
+                title: "Invalid Input",
+                description: "Please check your email and password.",
+                status: "error",
+                duration: 3000,
                 isClosable: true,
             })
         }
-        navigate('/home')
     }
 
     return (
@@ -118,6 +166,9 @@ function Login() {
                 <Text mt={4} textAlign="center">
                     Don't have an account?{' '}
                     <Link to="/register" color="blue.500">Register here</Link>
+                </Text>
+                <Text mt={3} textAlign="center">
+                    <Link to="/forgot-password" color="blue.500">Forgot Password?</Link>
                 </Text>
             </Box>
         </Container>
