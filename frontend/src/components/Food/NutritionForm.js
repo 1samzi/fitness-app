@@ -105,6 +105,15 @@ const NutritionForm = () => {
     onOpen(); // Open the modal
   };
 
+
+  const handleCloseDrawer = () => {
+    onClose();
+    // Delay clearing the selectedItem to prevent UI freeze
+    setTimeout(() => {
+      setSelectedItem(null);
+    }, 300); // 300ms delay, adjust if needed
+  };
+
   // state on each render to help debug
   console.log("Selected Item:", selectedItem);
   console.log("Is Drawer Open:", isOpen);
@@ -219,7 +228,7 @@ const NutritionForm = () => {
         </Stack>
       </Box>
       {/* Drawer for selected food item */}
-      <Drawer isOpen={isOpen} placement="bottom" onClose={() => { onClose(); setSelectedItem(null);}}>
+      <Drawer isOpen={isOpen} placement="bottom" onClose={handleCloseDrawer}>
         <DrawerOverlay />
         <DrawerContent>
           <DrawerHeader>Add Food</DrawerHeader>
@@ -233,7 +242,7 @@ const NutritionForm = () => {
             )}
           </DrawerBody>
           <DrawerFooter>
-            <Button colorScheme="blue" onClick={()=>{onClose(); setSelectedItem(null);}}>
+            <Button colorScheme="blue" onClick={handleCloseDrawer}>
               Cancel
             </Button>
           </DrawerFooter>
