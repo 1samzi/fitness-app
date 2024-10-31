@@ -20,7 +20,7 @@ function ForgotPassword() {
   const toast = useToast()
   const navigate = useNavigate()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
 
@@ -42,7 +42,7 @@ function ForgotPassword() {
           isClosable: true,
         })
         setEmail('')
-        navigate('/home')
+        navigate('/login')
       } else {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Failed to send reset link')
