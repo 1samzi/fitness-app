@@ -32,6 +32,7 @@ db.connection().then((database) => {
     module.exports = database
 
     app.use('/api/user', require('./routes/user.routes'));
+    app.use('/api/auth', require('./routes/auth.routes'));
        
     app.use((err, req, res, next) => {
         if (err instanceof expressValidation.ValidationError) {

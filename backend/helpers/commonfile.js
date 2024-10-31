@@ -57,10 +57,17 @@ function generateOTP() {
 // send mail
 let sendEmail = async (toEmail, subject, bodyHtml, attachments) => {
     const transporter = nodeMailer.createTransport({
-        service: process.env.EMAIL_SERVICE,
+        service:'gmail',
+        host:'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        debug: true,
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
+        },
+        tls:{
+            rejectUnauthorized: true
         }
     });
 

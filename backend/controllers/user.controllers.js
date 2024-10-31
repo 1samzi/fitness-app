@@ -18,12 +18,16 @@ const registerUsers = async (req, res, next) => {
 
         let userData = req.body
 
-        let getUser = await query.findOne(userColl, { userName: userData.userName })
+        let getUser = await query.findOne(userColl, { email: userData.email })
         if (getUser) {
-            return next(new APIError(`User already exists, Plese try another username!!`, httpStatus.BAD_REQUEST, true))
+            return next(new APIError(`User already exists, Plese try another email!!`, httpStatus.BAD_REQUEST, true))
         }
 
         userData.password = generatePassword(req.body.password)
+
+        if(!userData.userType){
+            userData.userType = 'user'
+        }
 
         let registerUsers = await query.insert(userColl, userData)
 
@@ -39,10 +43,10 @@ const registerUsers = async (req, res, next) => {
 const userLogin = async(req, res, next) => {
     try {
         const { password } = req.body;
-        const reqData = { userName: req.body.userName }
+        const reqData = { email: req.body.email }
 
         let userData = await query.findOne(userColl, reqData);
-        
+
         if (!userData || userData.password == null) {
             const message = `Incorrect email or password.`;
             return next(new APIError(`${message}`, httpStatus.BAD_REQUEST, true));
@@ -51,7 +55,7 @@ const userLogin = async(req, res, next) => {
         const isMatch = await bcrypt.compare(password, userData.password)
         
         if(isMatch){
-            const token = jwt.sign({ _id: userData._id, userName: userData.userName}, process.env.JWT_SECRET)
+            const token = jwt.sign({ _id: userData._id, email: userData.email}, process.env.JWT_SECRET)
             delete userData.password
             let obj = resPattern.successPattern(httpStatus.OK, {userData, token}, 'success');
             return res.status(obj.code).json(obj)
