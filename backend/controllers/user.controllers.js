@@ -7,7 +7,7 @@ const moment = require('moment');
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const { generatePassword, generateOTP, sendEmail } = require('../helpers/commonfile');
+const { generatePassword, generateOTP, sendEmail, validPassword } = require('../helpers/commonfile');
 
 
 const userColl = db.collection('Users');
@@ -51,9 +51,9 @@ const userLogin = async(req, res, next) => {
             const message = `Incorrect email or password.`;
             return next(new APIError(`${message}`, httpStatus.BAD_REQUEST, true));
         }
-
-        const isMatch = await bcrypt.compare(password, userData.password)
-        
+        console.log(userData);
+        const isMatch = validPassword(userData.password, password)
+        console.log(isMatch);
         if(isMatch){
             const token = jwt.sign({ _id: userData._id, email: userData.email}, process.env.JWT_SECRET)
             delete userData.password
