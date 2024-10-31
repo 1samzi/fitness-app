@@ -14,7 +14,7 @@ import {
   HStack,
   useColorModeValue,
 } from '@chakra-ui/react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function TwoFactorAuth() {
   const [code, setCode] = useState('')
@@ -22,6 +22,22 @@ function TwoFactorAuth() {
   const [timeLeft, setTimeLeft] = useState(30)
   const toast = useToast()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const email = location.state?.email || ''
+
+  useEffect(() => {
+    if (!email) {
+      toast({
+        title: "Error",
+        description: "Email not provided. Please try logging in again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+      navigate('/login')
+    }
+  }, [email, navigate, toast])
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -30,48 +46,78 @@ function TwoFactorAuth() {
     }
   }, [timeLeft])
 
-  const handleSubmit = async () => {
-    navigate('/admin-home')
-    // e.preventDefault()
-    // setIsLoading(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-    // // Here you would typically call your API to verify the 2FA code
-    // // This is a mock API call
-    // try {
-    //   await new Promise(resolve => setTimeout(resolve, 2000)) // Simulating API call
-    //   if (code === '123456') { // In a real scenario, this would be verified server-side
-    //     toast({
-    //       title: "Authentication successful",
-    //       description: "You have been successfully authenticated.",
-    //       status: "success",
-    //       duration: 5000,
-    //       isClosable: true,
-    //     })
-    //   } else {
-    //     throw new Error('Invalid code')
-    //   }
-    // } catch (error) {
-    //   toast({
-    //     title: "Authentication failed",
-    //     description: "The code you entered is incorrect. Please try again.",
-    //     status: "error",
-    //     duration: 5000,
-    //     isClosable: true,
-    //   })
-    // } finally {
-    //   setIsLoading(false)
-    // }
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp: code }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast({
+          title: "Authentication successful",
+          description: "You have been successfully authenticated.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        })
+        navigate('/admin-home')
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Authentication failed')
+      }
+    } catch (error) {
+      toast({
+        title: "Authentication failed",
+        description: error instanceof Error ? error.message : "The code you entered is incorrect. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     setTimeLeft(30)
-    toast({
-      title: "Code resent",
-      description: "A new authentication code has been sent to your device.",
-      status: "info",
-      duration: 5000,
-      isClosable: true,
-    })
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/generate-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Code resent",
+          description: "A new authentication code has been sent to your device.",
+          status: "info",
+          duration: 5000,
+          isClosable: true,
+        })
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to resend code')
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to resend code. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    }
   }
 
   return (

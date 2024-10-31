@@ -92,8 +92,28 @@ function Login() {
                         duration: 3000,
                         isClosable: true,
                     })
-                    if (data.data.userData.userType == "admin") {
-                        navigate('/two-factor-auth')
+                    if (data.data.userData.userType === "admin") {
+                        // Generate OTP for admin users
+                        const otpResponse = await fetch('http://localhost:3001/api/auth/generate-otp', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ email }),
+                        })
+
+                        if (otpResponse.ok) {
+                            toast({
+                                title: "OTP Sent",
+                                description: "An OTP has been sent to your email for verification.",
+                                status: "info",
+                                duration: 3000,
+                                isClosable: true,
+                            })
+                            navigate('/two-factor-auth', { state: { email } })
+                        } else {
+                            throw new Error('Failed to generate OTP')
+                        }
                     } else {
                         navigate('/home')
                     }
@@ -104,7 +124,7 @@ function Login() {
             } catch (error) {
                 toast({
                     title: "Login Failed",
-                    description: error.message || "An error occurred during login.",
+                    description: error instanceof Error ? error.message : "An error occurred during login.",
                     status: "error",
                     duration: 3000,
                     isClosable: true,
@@ -165,10 +185,10 @@ function Login() {
                 </form>
                 <Text mt={4} textAlign="center">
                     Don't have an account?{' '}
-                    <Link to="/register" color="blue.500">Register here</Link>
+                    <Link to="/register" style={{ color: 'blue.500' }}>Register here</Link>
                 </Text>
                 <Text mt={3} textAlign="center">
-                    <Link to="/forgot-password" color="blue.500">Forgot Password?</Link>
+                    <Link to="/forgot-password" style={{ color: 'blue.500' }}>Forgot Password?</Link>
                 </Text>
             </Box>
         </Container>
