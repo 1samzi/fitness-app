@@ -16,21 +16,23 @@ import {
     FormErrorMessage,
     useToast
 } from '@chakra-ui/react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function Register() {
     const [show, setShow] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
+    const navigate = useNavigate()
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
         sex: '',
         age: '',
         height: '',
+        heightUnit: 'cm', // set deadult values
         weight: '',
+        weightUnit: 'Kg', //set default values
         email: '',
         password: '',
-        confirmPassword: '',
     })
     const [errors, setErrors] = useState({})
     const toast = useToast()
@@ -61,20 +63,52 @@ function Register() {
     }
 
     const handleChange = (e) => {
-        const { name, value } = e.target
-        setFormData((prevData) => ({
-            ...prevData,
-            [name]: value,
-        }))
-
-        const error = validateField(name, value)
+        const { name, value } = e.target;
+    
+        // Only update formData if name is not 'confirmPassword'
+        if (name !== 'confirmPassword') {
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: value,
+            }));
+        }
+    
+        // Validate field and update errors, including confirmPassword if needed
+        const error = validateField(name, value);
         setErrors((prevErrors) => ({
             ...prevErrors,
             [name]: error,
-        }))
+        }));
+    };
+    
+
+    const handleUnitChange = (field, newUnit) => {
+        setFormData((prevData) => {
+            const oldUnit = prevData[`${field}Unit`]
+            const oldValue = prevData[field]
+            let newValue = oldValue
+
+            if (oldValue) {
+                if (field === 'height') {
+                    newValue = newUnit === 'cm' 
+                        ? (parseFloat(oldValue) * 2.54).toFixed(2) 
+                        : (parseFloat(oldValue) / 2.54).toFixed(2)
+                } else if (field === 'weight') {
+                    newValue = newUnit === 'kg' 
+                        ? (parseFloat(oldValue) / 2.2046).toFixed(2) 
+                        : (parseFloat(oldValue) * 2.2046).toFixed(2)
+                }
+            }
+
+            return {
+                ...prevData,
+                [`${field}Unit`]: newUnit,
+                [field]: newValue,
+            }
+        })
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
         const newErrors = {}
         Object.keys(formData).forEach((key) => {
@@ -85,15 +119,40 @@ function Register() {
         })
 
         if (Object.keys(newErrors).length === 0) {
-            // Form is valid, you can submit the data here
-            console.log('Form submitted:', formData)
-            toast({
-                title: "Registration successful",
-                description: "Your account has been created.",
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-            })
+            try {
+                const response = await fetch('http://localhost:3001/api/user/create-user', {
+                    method: 'POST',
+                    headers: {      
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                })
+
+                if (response.ok) {
+                    toast({
+                        title: "Registration successful",
+                        description: "Your account has been created.",
+                        status: "success",
+                        duration: 5000,
+                        isClosable: true,
+                    })
+
+                    navigate('/login')
+                    // You might want to redirect the user or clear the form here
+                } else {
+                    const errorData = await response.json()
+                    throw new Error(errorData.error || 'Registration failed')
+                }
+            } catch (error) {
+                console.error('Registration error:', error)
+                toast({
+                    title: "Registration failed",
+                    description: error.message || "An error occurred during registration.",
+                    status: "error",
+                    duration: 5000,
+                    isClosable: true,
+                })
+            }
         } else {
             setErrors(newErrors)
             toast({
@@ -176,9 +235,14 @@ function Register() {
                                         placeholder='Enter height'
                                         value={formData.height}
                                         onChange={handleChange}
+                                        type="number"
                                     />
                                     <InputRightElement width="4.5rem">
-                                        <Select defaultValue="cm" size="sm">
+                                        <Select 
+                                            value={formData.heightUnit} 
+                                            onChange={(e) => handleUnitChange('height', e.target.value)} 
+                                            size="sm"
+                                        >
                                             <option value="cm">cm</option>
                                             <option value="in">in</option>
                                         </Select>
@@ -187,7 +251,7 @@ function Register() {
                             </FormControl>
                         </SimpleGrid>
                         <SimpleGrid columns={[1, null, 2]} spacing={6}>
-                            <FormControl>
+                        <FormControl>
                                 <FormLabel htmlFor="weight">Weight</FormLabel>
                                 <InputGroup>
                                     <Input
@@ -199,7 +263,11 @@ function Register() {
                                         type="number"
                                     />
                                     <InputRightElement width="4.5rem">
-                                        <Select defaultValue="kg" size="sm">
+                                        <Select 
+                                            value={formData.weightUnit} 
+                                            onChange={(e) => handleUnitChange('weight', e.target.value)} 
+                                            size="sm"
+                                        >
                                             <option value="kg">kg</option>
                                             <option value="lbs">lbs</option>
                                         </Select>
@@ -261,10 +329,10 @@ function Register() {
                             Register
                         </Button>
                         <Text>
-                            Already have an account? 
+                            Already have an account?
                             <Link to="/login">
                                 <span className='about-link-text'>
-                                     Login
+                                    Login
                                 </span>
                             </Link>
                         </Text>

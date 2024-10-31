@@ -18,35 +18,46 @@ function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const toast = useToast()
-  const navigation = useNavigate()
+  const navigate = useNavigate()
 
-  const handleSubmit = async () => {
-    // e.preventDefault()
-    // setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
 
-    // // Here you would typically call your API to handle the password reset
-    // // This is a mock API call
-    // try {
-    //   await new Promise(resolve => setTimeout(resolve, 2000)) // Simulating API call
-    //   toast({
-    //     title: "Reset link sent",
-    //     description: "If an account exists with this email, you will receive a password reset link.",
-    //     status: "success",
-    //     duration: 5000,
-    //     isClosable: true,
-    //   })
-    //   setEmail('')
-    // } catch (error) {
-    //   toast({
-    //     title: "An error occurred",
-    //     description: "Unable to send reset link. Please try again later.",
-    //     status: "error",
-    //     duration: 5000,
-    //     isClosable: true,
-    //   })
-    // } finally {
-    //   setIsLoading(false)
-    // }
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Reset link sent",
+          description: "If an account exists with this email, you will receive a password reset link.",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        })
+        setEmail('')
+        navigate('/home')
+      } else {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to send reset link')
+      }
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: error instanceof Error ? error.message : "Unable to send reset link. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
