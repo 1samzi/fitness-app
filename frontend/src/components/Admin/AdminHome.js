@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Box,
   Heading,
@@ -18,28 +18,10 @@ import {
   Container,
   useColorModeValue,
   Button,
+  useToast,
 } from '@chakra-ui/react'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-
-
-const userData = [
-    {
-        "User":"John Doe",
-        "Action":"Created a new post",
-        "Time":"2 minutes ago"
-    },
-    {
-        "User":"John Doe",
-        "Action":"Created a new post",
-        "Time":"2 minutes ago"
-    },
-    {
-        "User":"John Doe",
-        "Action":"Created a new post",
-        "Time":"2 minutes ago"
-    },
-]
 
 function StatCard({ title, stat, helpText, type }) {
   return (
@@ -70,12 +52,53 @@ function StatCard({ title, stat, helpText, type }) {
 }
 
 function AdminHome() {
+  const [userData, setUserData] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
   const bgColor = useColorModeValue('gray.50', 'gray.800')
   const textColor = useColorModeValue('gray.800', 'white')
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const toast = useToast()
 
-  const onViewClick = () => {
-    navigate('/user-activity')
+  useEffect(() => {
+    fetchUserData()
+  }, [])
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem('token') // Get token from local storage
+      if (!token) {
+        throw new Error('No authentication token found')
+      }
+
+      const response = await fetch('http://localhost:3001/api/user/get-user', {
+        headers: {
+          'Authorization': `Bearer ${token}`, // Include token in request headers
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data')
+      }
+
+      const data = await response.json()
+      setUserData(data.data)
+      setIsLoading(false)
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to fetch user data',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      })
+      setIsLoading(false)
+    }
+  }
+
+  const onViewClick = (userId) => {
+    navigate(`/user-activity/${userId}`)
   }
 
   return (
@@ -88,8 +111,8 @@ function AdminHome() {
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={{ base: 5, lg: 8 }}>
           <StatCard
             title={'Total Users'}
-            stat={'5,000'}
-            helpText={'23% increase'}
+            stat={userData.length}
+            helpText={'Total registered users'}
             type={'increase'}
           />
           <StatCard
@@ -114,28 +137,38 @@ function AdminHome() {
           p={5}
         >
           <Heading as="h2" size="lg" mb={4}>
-            Recent Activity
+            User Data
           </Heading>
           <Table variant="simple">
             <Thead>
               <Tr>
-                <Th>User</Th>
-                <Th>Action</Th>
-                <Th>Time</Th>
+                <Th>Name</Th>
+                <Th>Email</Th>
+                <Th>Age</Th>
+                <Th>Height</Th>
+                <Th>Weight</Th>
                 <Th>Action</Th>
               </Tr>
             </Thead>
             <Tbody>
-            {userData.map((data) => (
-              <Tr>
-                <Td>{data.User}</Td>
-                <Td>{data.Action}</Td>
-                <Td>{data.Time}</Td>
-                <Td>
-                    <Button onClick={onViewClick}>View</Button>
-                </Td>
-              </Tr>
-              )) }
+              {isLoading ? (
+                <Tr>
+                  <Td colSpan={6}>Loading...</Td>
+                </Tr>
+              ) : (
+                userData.map((user) => (
+                  <Tr key={user._id}>
+                    <Td>{`${user.firstName} ${user.lastName}`}</Td>
+                    <Td>{user.email}</Td>
+                    <Td>{user.age}</Td>
+                    <Td>{`${user.height} ${user.heightUnit}`}</Td>
+                    <Td>{`${user.weight} ${user.weightUnit}`}</Td>
+                    <Td>
+                      <Button onClick={() => onViewClick(user._id)}>View</Button>
+                    </Td>
+                  </Tr>
+                ))
+              )}
             </Tbody>
           </Table>
         </Box>
