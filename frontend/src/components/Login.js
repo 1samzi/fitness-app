@@ -82,9 +82,9 @@ function Login() {
                 if (toast.isActive(toastIdRef.current)) {
                     toast.close(toastIdRef.current)
                 }
-
                 if (response.ok) {
                     const data = await response.json()
+                    localStorage.setItem("token", data.data.token)
                     toast({
                         title: "Login Successful",
                         description: "You have successfully logged in.",

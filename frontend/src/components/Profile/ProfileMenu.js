@@ -17,6 +17,7 @@ function ProfileMenu() {
   const navigate = useNavigate()
 
   const onSignOutClick = () => {
+    localStorage.removeItem("token");
     navigate('/login')
   }
 
