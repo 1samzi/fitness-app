@@ -23,6 +23,14 @@ import {
     DrawerOverlay, 
     DrawerContent, 
     useDisclosure,
+    List,
+    ListItem,
+    HStack,
+    Progress,
+    Slider,
+    SliderTrack,
+    SliderFilledTrack,
+    SliderThumb,
   } from '@chakra-ui/react'
 
 import NavBar from '../NavBar'
@@ -40,7 +48,31 @@ const NutritionForm = () => {
   const { isOpen, onOpen, onClose } = useDisclosure(); // handle open or close state for popup modal
   const [selectedItem, setSelectedItem] = useState(null); // Clicked food to add 
  
+  // adding to sections 
+  const [breakfastItems, setBreakfastItems] = useState([]);
+  const [lunchItems, setLunchItems] = useState([]);
+  const [dinnerItems, setDinnerItems] = useState([]);
+  const [snackItems, setSnackItems] = useState([]);
+
+  // selection of quantity when drawer is open
+  const [quantity, setQuantity] = useState(1);
+
+
+
+  //for progress bar
+  const calorieGoal = 2000; // Set a calorie goal
   
+  // Calculate total calories from all sections
+  const calculateTotalCalories = () => {
+    return [...breakfastItems, ...lunchItems, ...dinnerItems, ...snackItems].reduce(
+      (total, item) => total + Math.ceil(item.food.nutrients.ENERC_KCAL),
+      0
+    );
+  };
+
+  const totalCalories = calculateTotalCalories();
+  const progressValue = (totalCalories / calorieGoal) * 100;
+
   const fetchFoodData = async () => {
     console.log("Running `fetchFoodData` now.");
     
@@ -114,10 +146,72 @@ const NutritionForm = () => {
     }, 300); // 300ms delay, adjust if needed
   };
 
-  // state on each render to help debug
-  console.log("Selected Item:", selectedItem);
-  console.log("Is Drawer Open:", isOpen);
+  //adding items to main menu 
+  const addItemToSection = (section, item) => {
+    const itemWithId = { ...item, id: Date.now() }; // Give each item a unique ID
+    switch (section) {
+      case 'Breakfast':
+        setBreakfastItems([...breakfastItems, itemWithId]);
+        break;
+      case 'Lunch':
+        setLunchItems([...lunchItems, itemWithId]);
+        break;
+      case 'Dinner':
+        setDinnerItems([...dinnerItems, itemWithId]);
+        break;
+      case 'Snacks':
+        setSnackItems([...snackItems, itemWithId]);
+        break;
+      default:
+        break;
+    }
+    handleCloseDrawer();
+  };
 
+  //Allow for a limit of going over 20% of total cals
+  const maxAllowedQuantity = selectedItem
+  ? Math.floor(((totalCalories - calculateTotalCalories()) / selectedItem.food.nutrients.ENERC_KCAL) * 1.2)
+  : 1;
+
+  const removeItem = (section, id) => {
+    const removeById = (items) => items.filter((item) => item.id !== id);
+    switch (section) {
+      case 'Breakfast':
+        setBreakfastItems(removeById(breakfastItems));
+        break;
+      case 'Lunch':
+        setLunchItems(removeById(lunchItems));
+        break;
+      case 'Dinner':
+        setDinnerItems(removeById(dinnerItems));
+        break;
+      case 'Snacks':
+        setSnackItems(removeById(snackItems));
+        break;
+      default:
+        break;
+    }
+  };
+
+  const calculateSectionCalories = (items) => {
+    return items.reduce((total, item) => total + item.food.nutrients.ENERC_KCAL * item.quantity, 0);
+  };
+
+  const renderSectionItems = (section, items) => (
+    <List spacing={2} mt={2}>
+      {items.map((item) => (
+        <ListItem key={item.id}>
+          <HStack justify="space-between">
+            <Text>{item.food.label} {Math.ceil(item.food.nutrients.ENERC_KCAL)}</Text>
+            <Button size="xs" colorScheme="red" onClick={() => removeItem(section, item.id)}>
+              Remove
+            </Button>
+          </HStack>
+        </ListItem>
+      ))}
+    </List>
+  );
+  
   return( 
     <Box>
       <NavBar></NavBar>
@@ -128,20 +222,25 @@ const NutritionForm = () => {
             <Center>
                 <Heading mb={6}>Track Your Meals</Heading>
             </Center>
-            <Stack>
-                <Box>
-                    <Heading size = 'sm'>Breakfast</Heading>
+              {/* Calorie Goal Progress Bar */}
+            <VStack spacing={4} mt={4}>
+              <Text>Total Calories: {totalCalories} / {calorieGoal} kcal</Text>
+              <Progress colorScheme="green" size="lg" value={progressValue} w="75%"/>
+            </VStack>
+            <Box w="75%" p={8} mt={10} borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto">
+              <Heading size="md">Meals</Heading>
+              {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((section) => (
+                <Box key={section}  mt={8}>
+                  <Heading size="sm">{section}</Heading>
+                  {renderSectionItems(section, {
+                    Breakfast: breakfastItems,
+                    Lunch: lunchItems,
+                    Dinner: dinnerItems,
+                    Snacks: snackItems,
+                  }[section])}
                 </Box>
-                <Box  mt={8}>
-                    <Heading size = 'sm'>Lunch</Heading>
-                </Box>
-                <Box  mt={8}>
-                    <Heading size = 'sm'>Dinner</Heading>
-                </Box>
-                <Box  mt={8}>
-                    <Heading size = 'sm'>Snacks</Heading>
-                </Box>
-            </Stack>
+              ))}
+            </Box>
             <FormControl mt={8}>
                 <InputGroup>
                     <Input placeholder="Search for food..."
@@ -190,7 +289,7 @@ const NutritionForm = () => {
                   <Text>Category: {item.food.category}</Text>
                   <Text>Calories: {Math.ceil(item.food.nutrients.ENERC_KCAL) || "N/A"} kcal</Text>
                   {item.measures && item.measures.length > 0 ? (
-                    <Text>Per: 1 {item.measures[3].label} ({Math.ceil(item.measures[3].weight)} g)</Text>
+                    <Text>Per: 1 {item.measures[0].label} ({Math.ceil(item.measures[0].weight)} g)</Text>
                   ) : (
                     <Text>Serving Size: N/A</Text>
                   )}
@@ -231,18 +330,54 @@ const NutritionForm = () => {
       <Drawer isOpen={isOpen} placement="bottom" onClose={handleCloseDrawer}>
         <DrawerOverlay />
         <DrawerContent>
-          <DrawerHeader>Add Food</DrawerHeader>
+          <DrawerHeader>Select Meal</DrawerHeader>
           <DrawerBody>
             {selectedItem && (
-              <>
+              <VStack spacing={4} align="start">
                 <Text fontWeight="bold">{selectedItem.food.label}</Text>
                 <Text>Category: {selectedItem.food.category}</Text>
-                <Text>Calories: {Math.ceil(selectedItem.food.nutrients.ENERC_KCAL)} kcal</Text>
-              </>
+                <Text>
+                  Calories per serving: {Math.ceil(selectedItem.food.nutrients.ENERC_KCAL)} kcal
+                </Text>
+
+                {/* Quantity slider */}
+                <Box width="100%">
+                  <Text>Quantity:</Text>
+                  <Slider
+                    min={1}
+                    max={maxAllowedQuantity}
+                    value={quantity}
+                    onChange={(value) => setQuantity(value)}
+                    w="10%"
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                  </Slider>
+                </Box>
+
+                {/* Total calories display */}
+                <Text>
+                  Total Calories: {Math.ceil(selectedItem.food.nutrients.ENERC_KCAL * quantity)} kcal
+                </Text>
+
+                {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((section) => (
+                  <Button
+                    key={section}
+                    colorScheme="blue"
+                    width="100%"
+                    onClick={() => addItemToSection(section, selectedItem)}
+                    isDisabled={quantity === 0} // Disable if quantity is zero
+                  >
+                    Add to {section}
+                  </Button>
+                ))}
+              </VStack>
             )}
           </DrawerBody>
           <DrawerFooter>
-            <Button colorScheme="blue" onClick={handleCloseDrawer}>
+            <Button colorScheme="red" onClick={handleCloseDrawer}>
               Cancel
             </Button>
           </DrawerFooter>
