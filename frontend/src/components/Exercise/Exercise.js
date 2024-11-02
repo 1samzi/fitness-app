@@ -3,94 +3,84 @@ import { Box, FormControl, FormLabel, Input, Select, Button, Text } from '@chakr
 import NavBar from '../NavBar';
 
 function Exercise() { 
-    
-    // State variables for form fields
-    
-  const [exerciseType, setExerciseType] = useState(''); 
-  const [duration, setDuration] = useState('');        
-  const [intensity, setIntensity] = useState('');       
-  const [caloriesBurned, setCaloriesBurned] = useState(''); 
-
-  // Event handlers for form fields to update state
-    
-  const handleTypeChange = (event) => setExerciseType(event.target.value);
-  const handleDurationChange = (event) => setDuration(event.target.value);
-  const handleIntensityChange = (event) => setIntensity(event.target.value);
-  const handleCaloriesChange = (event) => setCaloriesBurned(event.target.value);
-
-  // Form submission handler.
-    
-  const handleSubmit = (event) => {
-    event.preventDefault(); 
-    console.log({
-      exerciseType,
-      duration,
-      intensity,
-      caloriesBurned
-    }); 
+  const [formData, setFormData] = useState({ //Variable for the forms
+    exercise: '',
+    duration: '',
+    intensity: '',
+    calories: ''
+  });
+  const [message, setMessage] = useState('');//Variable for confirmation message
+  
+  const Change = (event) => {               //For changing the variables 
+    const { name, value } = event.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value
+    }));
   };
 
+  const Submit = (event) => {
+    event.preventDefault();
+    console.log(formData);
+
+    setMessage('Success! Exercise Logged!');
+    setTimeout(() => setMessage(''), 5000);
+  }
+
   return (
-    <Box p={4} maxW="500px" mx="auto"> 
+    <Box p={4} maxW="500px" mx="auto">     
       <NavBar /> 
       <Text fontSize="2xl" mb={4}>Log Your Exercise</Text> 
-
-     {/*Exercise Form*/}
-      
-      <form onSubmit={handleSubmit}>  
+      {message && <Text color="green.500" mb={4}>{message}</Text>}
+      <form onSubmit={Submit}>  
         <FormControl mb={3}>
           <FormLabel>Exercise Type</FormLabel>
-          <Select placeholder="Select type" value={exerciseType} onChange={handleTypeChange}>
+          <Select
+            name="exercise"
+            placeholder="Choose type"
+            value={formData.exercise}
+            onChange={Change}
+          >
             <option value="Running">Running</option>
             <option value="Cycling">Cycling</option>
             <option value="Weightlifting">Weightlifting</option>
           </Select>
         </FormControl>
-      
-
-        {/*Duration Input */}
-      
+        
         <FormControl mb={3}>
           <FormLabel>Duration (minutes)</FormLabel>
           <Input
+            name="duration"
             type="number"
             placeholder="Enter duration"
-            value={duration}
-            onChange={handleDurationChange}
+            value={formData.duration}
+            onChange={Change}
           />
         </FormControl>
-    
-
-         
-         {/*Intensity Dropdown*/}
-    
         <FormControl mb={3}>
           <FormLabel>Intensity</FormLabel>
-          <Select placeholder="Select intensity" value={intensity} onChange={handleIntensityChange}>
+          <Select
+            name="intensity"
+            placeholder="Choose intensity"
+            value={formData.intensity}
+            onChange={Change}
+          >
             <option value="Low">Low</option>
             <option value="Moderate">Moderate</option>
             <option value="High">High</option>
           </Select>
         </FormControl>
-    
-
-       
-         {/*Calories Burned Input*/}
-    
+        
         <FormControl mb={3}>
           <FormLabel>Calories Burned</FormLabel>
           <Input
+            name="calories"
             type="number"
             placeholder="Enter calories burned"
-            value={caloriesBurned}
-            onChange={handleCaloriesChange}
+            value={formData.calories}
+            onChange={Change}
           />
         </FormControl>
-    
-
-    
-        {/*Submit Button */}
-    
         <Button colorScheme="blue" type="submit" mt={4}>Submit</Button>
       </form>
     </Box>
