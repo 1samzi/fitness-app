@@ -3,15 +3,14 @@ import { Box, FormControl, FormLabel, Input, Select, Button, Text } from '@chakr
 import NavBar from '../NavBar';
 
 function Exercise() { 
-  const [formData, setFormData] = useState({ //Variable for the forms
+  const [formData, setFormData] = useState({ 
     exercise: '',
     duration: '',
-    intensity: '',
-    calories: ''
+    intensity: ''
   });
-  const [message, setMessage] = useState('');//Variable for confirmation message
+  const [message, setMessage] = useState('');
   
-  const Change = (event) => {               //For changing the variables 
+  const handleChange = (event) => {              
     const { name, value } = event.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -19,27 +18,88 @@ function Exercise() {
     }));
   };
 
-  const Submit = (event) => {
-    event.preventDefault();
-    console.log(formData);
+const submit = (event) => {
+  event.preventDefault();
 
-    setMessage('Success! Exercise Logged!');
-    setTimeout(() => setMessage(''), 5000);
+  const { exercise, duration, intensity } = formData;
+  let calories = 0;
+
+  if (exercise && duration && intensity) {    
+    const durationTime = parseFloat(duration);
+
+    switch (exercise) {
+      case 'Running':
+        switch (intensity) {
+          case 'High':
+            calories = durationTime * 15;
+            break;
+          case 'Moderate':
+            calories = durationTime * 10;
+            break;
+          case 'Low':
+            calories = durationTime * 5;
+            break;
+          default:
+            break;
+        }
+        break;
+
+      case 'Cycling':
+        switch (intensity) {
+          case 'High':
+            calories = durationTime * 12;
+            break;
+          case 'Moderate':
+            calories = durationTime * 8;
+            break;
+          case 'Low':
+            calories = durationTime * 4;
+            break;
+          default:
+            break;
+        }
+        break;
+
+      case 'Weightlifting':
+        switch (intensity) {
+          case 'High':
+            calories = durationTime * 10;
+            break;
+          case 'Moderate':
+            calories = durationTime * 7;
+            break;
+          case 'Low':
+            calories = durationTime * 4;
+            break;
+          default:
+            break;
+        }
+        break;
+
+      default:
+        break;
+    }
   }
+
+  setMessage(`Your Calories burned: ${calories}`);
+  setTimeout(() => setMessage(''), 5000);
+};
+
 
   return (
     <Box p={4} maxW="500px" mx="auto">     
       <NavBar /> 
-      <Text fontSize="2xl" mb={4}>Log Your Exercise</Text> 
-      {message && <Text color="green.500" mb={4}>{message}</Text>}
-      <form onSubmit={Submit}>  
+      <Text fontSize="24px" mb={4}>Log Your Exercise</Text> 
+      {message && <Text color="green" mb={4}>{message}</Text>}
+      <form onSubmit={submit}>  
         <FormControl mb={3}>
+
           <FormLabel>Exercise Type</FormLabel>
           <Select
             name="exercise"
             placeholder="Choose type"
             value={formData.exercise}
-            onChange={Change}
+            onChange={handleChange}
           >
             <option value="Running">Running</option>
             <option value="Cycling">Cycling</option>
@@ -54,7 +114,7 @@ function Exercise() {
             type="number"
             placeholder="Enter duration"
             value={formData.duration}
-            onChange={Change}
+            onChange={handleChange}
           />
         </FormControl>
         <FormControl mb={3}>
@@ -63,7 +123,7 @@ function Exercise() {
             name="intensity"
             placeholder="Choose intensity"
             value={formData.intensity}
-            onChange={Change}
+            onChange={handleChange}
           >
             <option value="Low">Low</option>
             <option value="Moderate">Moderate</option>
@@ -71,18 +131,9 @@ function Exercise() {
           </Select>
         </FormControl>
         
-        <FormControl mb={3}>
-          <FormLabel>Calories Burned</FormLabel>
-          <Input
-            name="calories"
-            type="number"
-            placeholder="Enter calories burned"
-            value={formData.calories}
-            onChange={Change}
-          />
-        </FormControl>
         <Button colorScheme="blue" type="submit" mt={4}>Submit</Button>
       </form>
+    
     </Box>
   );
 }
