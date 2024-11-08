@@ -278,13 +278,13 @@ const NutritionForm = () => {
   //Allow for a limit of going over 20% of total cals
   const maxAllowedQuantity = selectedItem
   ? Math.min(
-      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.food.nutrients.ENERC_KCAL || 1)) * 1.2),
+      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.food.nutrients.ENERC_KCAL || 1)) * 1.5),
       maxServings
     )
   : 1;
 
   const adjustQuantity = selectedSectionItem ? Math.min(
-    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.food.nutrients.ENERC_KCAL || 1)) * 1.2),
+    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.food.nutrients.ENERC_KCAL || 1)) * 1.5),
     maxServings
     
   )
@@ -376,6 +376,11 @@ const totalMacros = getTotalMacros();
                   Calories Consumed {totalCalories} / {calorieGoal} Calorie Goal
                   </StatHelpText>
                 </Stat> 
+                <Stat style={{ display: progressValue > 100 ? 'block' : 'none' }}>
+                  <StatHelpText>
+                    <Text color="red">WARNING: over calorie goal!</Text>
+                  </StatHelpText>
+                </Stat>
               <Progress colorScheme={progressValue > 100 ? "orange" : "green"} size="lg" value={progressValue} w="75%"/>
               <Stack direction={'row'}>
                 <Box 
@@ -488,7 +493,7 @@ const totalMacros = getTotalMacros();
                         aria-label="quantity-slider"
                         defaultValue={selectedItem?.quantity}
                         min={0}
-                        max={adjustQuantity} // Adjust this based on calorie goal and item data
+                        max={adjustQuantity > 0 ? adjustQuantity: selectedSectionItem?.quantity} // Adjust this based on calorie goal and item data
                         onChange={(value) => setQuantity(value)}
                         value={quantity}
                         step={0.5}
