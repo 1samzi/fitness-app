@@ -38,7 +38,6 @@ function VerifyForgotPassword() {
     }
   }
 
-  console.log(email);
 
   const validateForm = () => {
     const newErrors = {}

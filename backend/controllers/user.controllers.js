@@ -51,9 +51,8 @@ const userLogin = async(req, res, next) => {
             const message = `Incorrect email or password.`;
             return next(new APIError(`${message}`, httpStatus.BAD_REQUEST, true));
         }
-        console.log(userData);
         const isMatch = validPassword(userData.password, password)
-        console.log(isMatch);
+
         if(isMatch){
             const token = jwt.sign({ _id: userData._id, email: userData.email}, process.env.JWT_SECRET)
             delete userData.password
