@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, FormControl, FormLabel, Input, Select, Button, Text } from '@chakra-ui/react';
+import { Box, FormControl, FormLabel, Input, Select, Button, Text, Heading } from '@chakra-ui/react';
 import NavBar from '../NavBar';
 
 function Exercise() { 
@@ -87,9 +87,10 @@ const submit = (event) => {
 
 
   return (
-    <Box p={4} maxW="500px" mx="auto">     
+    <Box mx="auto">     
       <NavBar /> 
-      <Text fontSize="24px" mb={4}>Log Your Exercise</Text> 
+      <Box w="50%" p={8} mt={10} borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto">
+      <Heading mb={4}>Log Your Exercise</Heading> 
       {message && <Text color="green" mb={4}>{message}</Text>}
       <form onSubmit={submit}>  
         <FormControl mb={3}>
@@ -135,6 +136,8 @@ const submit = (event) => {
       </form>
     
     </Box>
+      </Box>
+      
   );
 }
 
