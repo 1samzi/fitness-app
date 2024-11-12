@@ -15,6 +15,7 @@ import {
 import React, { useState, useEffect } from 'react';
 import { AgCharts } from 'ag-charts-react';
 
+ // TODO: need to be dynamic data from chart
 const getData = () => {
     return [
         { asset: "Carbohydrates", amount: 55 },
@@ -44,13 +45,13 @@ function Dashboard() {
                 // Simulate a failing API call
                 throw new Error("Backend not available");
 
-                // Uncomment and use this code when the backend is ready
-                // const response = await fetch('/api/user/profile');
-                // const data = await response.json();
-                // setProfile(data);
+                /* Uncomment when ready to pull data from backend
+                 const response = await fetch('/api/user/profile');
+                 const data = await response.json();
+                 setProfile(data); */
             } catch (error) {
                 console.error("Error fetching profile:", error);
-                setProfile(dummyProfile);  // Use dummy data if API call fails
+                setProfile(dummyProfile);  // Use dummy data for now
             } finally {
                 setLoading(false);
             }
@@ -58,12 +59,14 @@ function Dashboard() {
         fetchProfile();
     }, []);
 
+    // TODO: need to be dynamic data
     const [exerciseLogs, setExerciseLogs] = useState([
         { activity: 'Cardio', minutes: 30, calories: 300 },
         { activity: 'Strength Training', minutes: 45, calories: 400 },
         { activity: 'Stretching', minutes: 60, calories: 200 },
     ]);
 
+    // TODO: need to be dynamic data
     const [macroNutrients, setMacroNutrients] = useState([
         { name: 'Carbohydrates', total: 130, percentage: 55, goal: 50 },
         { name: 'Protein', total: 50, percentage: 20, goal: 25 },
