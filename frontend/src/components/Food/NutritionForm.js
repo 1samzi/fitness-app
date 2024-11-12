@@ -1,19 +1,14 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import {
     Box,
     Button,
     Center,
-    Container,
     FormControl,
-    FormErrorMessage,
-    FormLabel,
     Heading,
     Input,
     InputGroup,
-    InputRightElement,
     VStack,
     Text,
-    Link,
     useToast,
     Stack,
     Drawer, 
@@ -25,13 +20,11 @@ import {
     useDisclosure,
     List,
     ListItem,
-    HStack,
     Progress,
     Slider,
     SliderTrack,
     SliderFilledTrack,
     SliderThumb,
-    Select,
     StatHelpText,
     Stat,
     Modal,
@@ -58,7 +51,9 @@ const calorieGoal = 2000; // Set a calorie goal
 const maxServings = 30;
 
 const NutritionForm = () => {
-
+  const token = localStorage.getItem('token');
+  const userId = localStorage.getItem('userId');
+  
   const [query, setQuery] = useState('');  // Storing the search input
   const [foodData, setFoodData] = useState([]);  // API response data
   const toast = useToast(); // Error message pop ups
@@ -77,7 +72,8 @@ const NutritionForm = () => {
   // selection of quantity when drawer is open
   const [quantity, setQuantity] = useState(1);
 
-
+  //meals pulled from account
+  const [meals, setMeals] = useState([]);
 
   // Modal state for section items
   const {
@@ -91,7 +87,7 @@ const NutritionForm = () => {
 
   //handler for clicking on section items
   const handleSectionItemClick = (item) => {
-      console.log("Function `handleSectionItemClick` called: " + item.food.label);
+      console.log("Function `handleSectionItemClick` called: " + item.label);
       setSelectedSectionItem(item);
       onSectionOpen();
   };
@@ -108,7 +104,7 @@ const NutritionForm = () => {
   // Calculate total calories from all sections
   const calculateTotalCalories = () => {
     return [...breakfastItems, ...lunchItems, ...dinnerItems, ...snackItems].reduce(
-      (total, item) => total + (Math.floor(item.food.nutrients.ENERC_KCAL )* item.quantity),
+      (total, item) => total + (Math.floor(item.calories )* item.quantity),
       0
     );
   };
@@ -191,129 +187,134 @@ const NutritionForm = () => {
   };
 
   //adding items to main menu 
-  const addItemToSection =  (section, item) => {
-
-     
-        const adjustedItem = {
-          ...item,
-          quantity,
-          dateAdded: new Date().toISOString().split('T')[0], //current date (YYYY-MM-DD) for historic data
-          section: section
-        };
-        console.log(adjustedItem);
-        // Add item to the respective meal section
-        const newItem = { ...adjustedItem, id: item.food.foodId }; // Use foodId as the unique ID
-    
-        const updateOrAddItem = (currentItems) => {
-          const existingItemIndex = currentItems.findIndex(existingItem => existingItem.id === newItem.id);
-          if (existingItemIndex >= 0) {
-            // Update quantity if item already exists
-            const updatedItems = [...currentItems];
-            updatedItems[existingItemIndex].quantity += quantity;
-            return updatedItems;
-          } else {
-            // Add as new item if not found
-            return [...currentItems, newItem];
-          }
-        };
-    
-      switch (section) {
-        case 'Breakfast':
-          setBreakfastItems(updateOrAddItem(breakfastItems));
-          break;
-        case 'Lunch':
-          setLunchItems(updateOrAddItem(lunchItems));
-          break;
-        case 'Dinner':
-          setDinnerItems(updateOrAddItem(dinnerItems));
-          break;
-        case 'Snacks':
-          setSnackItems(updateOrAddItem(snackItems));
-          break;
-        default:
-          break;
+  const addItemToSection = async (section, item) => {
+ 
+    // Send API request to add meal
+    const mealData = {
+      section,
+      label: item.food.label,
+      calories: Math.ceil(item.food.nutrients.ENERC_KCAL * item.quantity),
+      quantity: item.quantity,
+      nutrients: {
+        protein: item.food.nutrients.PROCNT ? Math.ceil(item.food.nutrients.PROCNT * item.quantity) : 0,
+        fat: item.food.nutrients.FAT ? Math.ceil(item.food.nutrients.FAT * item.quantity) : 0,
+        carbohydrates: item.food.nutrients.CHOCDF ? Math.ceil(item.food.nutrients.CHOCDF * item.quantity) : 0,
       }
-  
-      setQuantity(0);
-      handleCloseDrawer();
+    }
+
+    await addMealRequest(mealData);
+    
+    setQuantity(0);
+    handleCloseDrawer();
   };
 
-  const adjustItemInSection = (selectedSectionItem, quantity) =>{
-    console.log ("adjusting an Item in this section")
+  useEffect(() => {
+    console.log(meals)
+    // Fetch meals when the component mounts
+    const fetchMealsData = async () => {
+      const fetchedMeals = await fetchMeals(); 
+      if (fetchedMeals && fetchedMeals.length > 0) {
+        setMeals(fetchedMeals); 
+      }
+    };
+  
+    fetchMealsData(); 
+  }, []); 
+  
+  useEffect(() => {
+    
+    if (meals.length > 0) {
+      // Populate section items based on fetched meal data
+      const breakfast = meals.filter(meal => meal.section === 'Breakfast');
+      const lunch = meals.filter(meal => meal.section === 'Lunch');
+      const dinner = meals.filter(meal => meal.section === 'Dinner');
+      const snacks = meals.filter(meal => meal.section === 'Snacks');
+  
+      setBreakfastItems(breakfast);
+      setLunchItems(lunch);
+      setDinnerItems(dinner);
+      setSnackItems(snacks);
+    }
+  }, [meals]); 
+
+  const adjustItemInSection = async (selectedSectionItem, quantity) =>{
+    
     // Update the quantity if it's greater than zero
     const updatedItem = {
       ...selectedSectionItem,
       quantity: quantity,
     };
 
-    if (quantity === 0){
-      // Remove the item if the new quantity is zero or less
-      removeItem(selectedSectionItem.section, selectedSectionItem.id);
-    }
-    else{
-      const updateSectionItems = (items) =>
-        items.map((item) =>
-          item.id === selectedSectionItem.id ? updatedItem : item
-        );
-  
-      switch (selectedSectionItem.section) {
-        case 'Breakfast':
-          setBreakfastItems(updateSectionItems(breakfastItems));
-          break;
-        case 'Lunch':
-          setLunchItems(updateSectionItems(lunchItems));
-          break;
-        case 'Dinner':
-          setDinnerItems(updateSectionItems(dinnerItems));
-          break;
-        case 'Snacks':
-          setSnackItems(updateSectionItems(snackItems));
-          break;
-        default:
-          break;
+    // Run an update call here
+    try {
+      // Send the updated meal data to the backend
+      const response = await fetch(`http://localhost:3001/api/user/update-meal/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, 
+        },
+        body: JSON.stringify(updatedItem),  
+      });
+
+      if (response.ok) {
+        // update successfull refetch the meals
+        await fetchMeals();
+      } else {
+        console.error('Failed to update meal');
       }
+    } catch (error) {
+      console.error('Error updating meal:', error);
     }
+
+    if (quantity === 0) {
+      removeItemFromState(selectedSectionItem);
+    }
+    
     handleSectionClose(); 
   };
+
+  const removeItemFromState = (selectedSectionItem) => {
+    const { section, _id } = selectedSectionItem;
+
+    switch (section) {
+      case 'Breakfast':
+        setBreakfastItems((prevItems) => prevItems.filter((item) => item._id !== _id));
+        break;
+      case 'Lunch':
+        setLunchItems((prevItems) => prevItems.filter((item) => item._id !== _id));
+        break;
+      case 'Dinner':
+        setDinnerItems((prevItems) => prevItems.filter((item) => item._id !== _id));
+        break;
+      case 'Snacks':
+        setSnackItems((prevItems) => prevItems.filter((item) => item._id !== _id));
+        break;
+      default:
+        console.error('Unknown section:', section);
+        break;
+    }
+  };
+
   //Allow for a limit of going over 20% of total cals
   const maxAllowedQuantity = selectedItem
   ? Math.min(
-      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.food.nutrients.ENERC_KCAL || 1)) * 1.5),
+      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.calories || 1)) * 1.5),
       maxServings
     )
   : 1;
 
   const adjustQuantity = selectedSectionItem ? Math.min(
-    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.food.nutrients.ENERC_KCAL || 1)) * 1.5),
+    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.calories || 1)) * 1.5),
     maxServings
     
   )
   : 1;
 
-  const removeItem = (section, id) => {
-    const removeById = (items) => items.filter((item) => item.id !== id);
-    switch (section) {
-      case 'Breakfast':
-        setBreakfastItems(removeById(breakfastItems));
-        break;
-      case 'Lunch':
-        setLunchItems(removeById(lunchItems));
-        break;
-      case 'Dinner':
-        setDinnerItems(removeById(dinnerItems));
-        break;
-      case 'Snacks':
-        setSnackItems(removeById(snackItems));
-        break;
-      default:
-        break;
-    }
-  };
-
-  const renderSectionItems = (section, items) => (
+  const renderSectionItems = (sectionItems) => (
     <List spacing={2} mt={2}>
-      {items.map((item) => (
-        <ListItem key={item.id}>
+      {sectionItems.map((meal) => (
+        <ListItem key={meal._id}>
             {/* Display label, quantity, and total calories for the item */}
             <Box
             as="button"
@@ -324,17 +325,12 @@ const NutritionForm = () => {
             alignContent={'left'}
             borderRadius={'md'}
             pl ={'10px'}
-            onClick={() => handleSectionItemClick(item)}
+            onClick={() => handleSectionItemClick(meal)}
             >
-            <Stat>{item.food.label} ({item.quantity})  
+            <Stat>{meal.label} ({meal.quantity})  
             <StatHelpText size={'sm'}>
-              {Math.floor(item.food.nutrients.PROCNT) * item.quantity} p | {Math.floor(item.food.nutrients.FAT)* item.quantity} f | {Math.floor(item.food.nutrients.CHOCDF)* item.quantity} c | {(Math.floor(item.food.nutrients.ENERC_KCAL) * item.quantity)} calories
+              {Math.floor(meal.nutrients.protein) * meal.quantity} p | {Math.floor(meal.nutrients.fat)* meal.quantity} f | {Math.floor(meal.nutrients.carbohydrates)* meal.quantity} c | {(Math.floor(meal.calories) * meal.quantity)} calories
             </StatHelpText></Stat>
-            
-            
-            {/* <Button size="xs" colorScheme="red" onClick={() => removeItem(section, item.id)}>
-              Remove
-            </Button> */}
             </Box>
         </ListItem>
       ))}
@@ -344,16 +340,59 @@ const NutritionForm = () => {
 // Function to calculate total macros
 const getTotalMacros = () => {
   const allItems = [...breakfastItems, ...lunchItems, ...dinnerItems, ...snackItems];
+  
   return allItems.reduce(
     (totals, item) => ({
-      calories:totals.calories + (Math.floor( item.food.nutrients.ENERC_KCAL) * item.quantity),
-      protein: totals.protein + (Math.floor( item.food.nutrients.PROCNT) * item.quantity),
-      fat: totals.fat + (Math.floor(item.food.nutrients.FAT ) * item.quantity),
-      carbohydrates: totals.carbohydrates +  (Math.floor(item.food.nutrients.CHOCDF ) * item.quantity),
+      calories:totals.calories + (Math.floor( item.calories) * item.quantity),
+      protein: totals.protein + (Math.floor( item.nutrients.protein) * item.quantity),
+      fat: totals.fat + (Math.floor(item.nutrients.fat ) * item.quantity),
+      carbohydrates: totals.carbohydrates +  (Math.floor(item.nutrients.carbohydrates ) * item.quantity),
     }), {calories: 0, protein: 0, fat: 0, carbohydrates: 0}
   );
 };
 
+async function addMealRequest(mealData) {
+  
+  try {
+    const response = await fetch(`http://localhost:3001/api/user/log-meal/${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      },
+      body: JSON.stringify(mealData)  // Send the meal data in the body
+    });
+    // Check if the meal was added successfully
+    if (response.status === 200) {
+      await fetchMeals();
+    }
+    } catch (error) {
+      console.error('Error adding meal:', error);
+      
+    }
+}
+
+async function fetchMeals() {
+  const today = new Date().toISOString().split('T')[0]
+  try {
+      const response = await fetch(`http://localhost:3001/api/user/get-meals/${userId}?date=${today}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const result = await response.json();
+      if (response.ok) {
+          setMeals(result.data);  
+      } else {
+          throw new Error(result.message);
+      }
+      
+  } catch (error) {
+      console.error("Error fetching meals:", error.message);
+  }
+};
 
 
 const totalMacros = getTotalMacros();
@@ -430,14 +469,16 @@ const totalMacros = getTotalMacros();
             <Box w="75%" p={8} mt={10} borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto">
               <Heading size="md">Meals</Heading>
               {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((section) => (
-                <Box key={section}  mt={8}>
-                  <Heading size="sm">{section}</Heading>
-                  {renderSectionItems(section, {
+              <Box key={section} mt={8}>
+                <Heading size="sm">{section}</Heading>
+                {renderSectionItems(
+                  {
                     Breakfast: breakfastItems,
                     Lunch: lunchItems,
                     Dinner: dinnerItems,
                     Snacks: snackItems,
-                  }[section])}
+                  }[section]
+                )}
                 </Box>
               ))}
             </Box>
@@ -449,7 +490,7 @@ const totalMacros = getTotalMacros();
                 <ModalHeader>
                 
                 <Heading fontWeight="normal" marginBottom={3}>Edit {selectedSectionItem?.section}</Heading>
-                  {selectedSectionItem?.food.label} ({quantity ? quantity: selectedSectionItem?.quantity}) {(quantity? quantity *  Math.floor(selectedSectionItem?.food.nutrients.ENERC_KCAL) : Math.floor(selectedSectionItem?.food.nutrients.ENERC_KCAL) * selectedSectionItem?.quantity)} calories</ModalHeader>
+                  {selectedSectionItem?.label} ({quantity ? quantity: selectedSectionItem?.quantity}) {(quantity? quantity *  Math.floor(selectedSectionItem?.calories) : Math.floor(selectedSectionItem?.foodcalories) * selectedSectionItem?.quantity)} calories</ModalHeader>
                 <ModalCloseButton />
                 <ModalBody>
                   {/* Content and actions of selected item*/}
@@ -462,7 +503,7 @@ const totalMacros = getTotalMacros();
                         mt={2}
                         backgroundColor={'rgba(54, 162, 235, 0.6)'}
                         w = "100px">
-                      <Text>{quantity? quantity * Math.floor(selectedSectionItem?.food.nutrients.PROCNT) :Math.floor(selectedSectionItem?.food.nutrients.PROCNT) * selectedSectionItem?.quantity} p 
+                      <Text>{quantity? quantity * Math.floor(selectedSectionItem?.nutrients.protein) :Math.floor(selectedSectionItem?.nutrients.protein) * selectedSectionItem?.quantity} p 
                       </Text> 
                     </Box> 
                     <Box
@@ -474,7 +515,7 @@ const totalMacros = getTotalMacros();
                         backgroundColor={'rgba(255, 99, 132, 0.6)'}
                         >
                       <Text>
-                      {quantity? quantity * Math.floor(selectedSectionItem?.food.nutrients.FAT) :Math.floor(selectedSectionItem?.food.nutrients.FAT)* selectedSectionItem?.quantity} f  
+                      {quantity? quantity * Math.floor(selectedSectionItem?.nutrients.fat) :Math.floor(selectedSectionItem?.nutrients.fat)* selectedSectionItem?.quantity} f  
                       </Text>
                     </Box>
                     <Box
@@ -485,7 +526,7 @@ const totalMacros = getTotalMacros();
                       w = "100px"
                       backgroundColor={'rgba(255, 206, 86, 0.6)'}
                       >
-                    {quantity? quantity * Math.floor(selectedSectionItem?.food.nutrients.CHOCDF) : Math.floor(selectedSectionItem?.food.nutrients.CHOCDF)* (selectedSectionItem?.quantity)} c </Box>
+                    {quantity? quantity * Math.floor(selectedSectionItem?.nutrients.calories) : Math.floor(selectedSectionItem?.nutrients.carbohydrates)* (selectedSectionItem?.quantity)} c </Box>
                     </Stack>
                   </Center>
                   <Text mt = {'5'}>Adjust Quantity: {quantity}</Text>
