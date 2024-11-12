@@ -30,7 +30,6 @@ function Dashboard() {
     const [loading, setLoading] = useState(true);
 
     // Fetch profile data from backend
-	/*
     useEffect(() => {
         // Mock API call to fetch profile data
         async function fetchProfile() {
@@ -46,7 +45,6 @@ function Dashboard() {
         }
         fetchProfile();
     }, []);
-	*/
 	
  // TODO: need to be dynamic data
     const [exerciseLogs, setExerciseLogs] = useState([
