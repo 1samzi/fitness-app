@@ -11,12 +11,10 @@ import {
     VStack,
     Text,
     Flex,
-    Spinner,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { AgCharts } from 'ag-charts-react';
 
-    // TODO: need to be dynamic data from chart
 const getData = () => {
     return [
         { asset: "Carbohydrates", amount: 55 },
@@ -26,34 +24,46 @@ const getData = () => {
 }
 
 function Dashboard() {
+    // Dummy profile data
+    const dummyProfile = {
+        firstName: "John",
+        lastName: "Doe",
+        sex: "Male",
+        age: 28,
+        height: 175, // cm
+        weight: 70,  // kg
+        fitnessGoal: "Build muscle",
+    };
+
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetch profile data from backend
     useEffect(() => {
-        // Mock API call to fetch profile data
         async function fetchProfile() {
             try {
-                const response = await fetch('/api/user/profile'); // Replace with actual API endpoint
-                const data = await response.json();
-                setProfile(data);
+                // Simulate a failing API call
+                throw new Error("Backend not available");
+
+                // Uncomment and use this code when the backend is ready
+                // const response = await fetch('/api/user/profile');
+                // const data = await response.json();
+                // setProfile(data);
             } catch (error) {
                 console.error("Error fetching profile:", error);
+                setProfile(dummyProfile);  // Use dummy data if API call fails
             } finally {
                 setLoading(false);
             }
         }
         fetchProfile();
     }, []);
-	
- // TODO: need to be dynamic data
+
     const [exerciseLogs, setExerciseLogs] = useState([
         { activity: 'Cardio', minutes: 30, calories: 300 },
         { activity: 'Strength Training', minutes: 45, calories: 400 },
         { activity: 'Stretching', minutes: 60, calories: 200 },
     ]);
-	
- // TODO: need to be dynamic data
+
     const [macroNutrients, setMacroNutrients] = useState([
         { name: 'Carbohydrates', total: 130, percentage: 55, goal: 50 },
         { name: 'Protein', total: 50, percentage: 20, goal: 25 },
@@ -90,9 +100,9 @@ function Dashboard() {
                             Profile
                         </Heading>
                         {loading ? (
-                            <Spinner />
+                            <Text>Loading profile...</Text>
                         ) : (
-                            profile ? (
+                            profile && (
                                 <VStack align="start" spacing={2}>
                                     <Text><strong>First Name:</strong> {profile.firstName}</Text>
                                     <Text><strong>Last Name:</strong> {profile.lastName}</Text>
@@ -102,8 +112,6 @@ function Dashboard() {
                                     <Text><strong>Weight:</strong> {profile.weight} kg</Text>
                                     <Text><strong>Fitness Goal:</strong> {profile.fitnessGoal}</Text>
                                 </VStack>
-                            ) : (
-                                <Text>Error loading profile information.</Text>
                             )
                         )}
                     </Box>
@@ -114,7 +122,6 @@ function Dashboard() {
                             Exercise Log
                         </Heading>
                         <Box width="100%" maxWidth="auto" margin="0 auto">
-                             {/* Placeholder for chart */}
                             <AgCharts options={options} />
                         </Box>
                         <Table variant="striped" colorScheme="teal">
@@ -143,7 +150,6 @@ function Dashboard() {
                             Macro-nutrients
                         </Heading>
                         <Box width="100%" maxWidth="auto" margin="0 auto">
-                            {/* Placeholder for chart */}
                             <AgCharts options={options} />
                         </Box>
                         <Table variant="striped" colorScheme="teal" mt={6}>
