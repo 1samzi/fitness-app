@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Flex,
   Avatar,
@@ -9,12 +9,17 @@ import {
   MenuDivider,
   IconButton,
   Button,
+  useToast,
 } from '@chakra-ui/react'
 import { MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
 
 function ProfileMenu() {
   const navigate = useNavigate()
+  const [user, setUser] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const toast = useToast()
 
   const onSignOutClick = () => {
     localStorage.removeItem("token");
@@ -24,11 +29,7 @@ function ProfileMenu() {
   const onProfileClick = () => {
     navigate('/profile')
   }
-
-  const onSettingClick = () => {
-    navigate('/setting')
-  }
-
+  
   return (
     <Flex alignItems={'center'} gap={2}>
       <Avatar
@@ -36,6 +37,7 @@ function ProfileMenu() {
         src={
           'https://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
         }
+        // name={`${user.firstName} ${user.lastName}`}
       />
       <Menu>
         <MenuButton
@@ -47,7 +49,6 @@ function ProfileMenu() {
         />
         <MenuList>
           <MenuItem onClick={onProfileClick}>Profile</MenuItem>
-          <MenuItem onClick={onSettingClick}>Settings</MenuItem>
           <MenuDivider />
           <MenuItem onClick={onSignOutClick}>Sign out</MenuItem>
         </MenuList>

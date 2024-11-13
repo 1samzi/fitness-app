@@ -14,6 +14,7 @@ import {
     VStack,
     Text,
     useToast,
+    HStack,
 } from '@chakra-ui/react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -183,13 +184,24 @@ function Login() {
                         </Button>
                     </VStack>
                 </form>
-                <Text mt={4} textAlign="center">
-                    Don't have an account?{' '}
-                    <Link to="/register" style={{ color: 'blue.500' }}>Register here</Link>
-                </Text>
-                <Text mt={3} textAlign="center">
-                    <Link to="/forgot-password" style={{ color: 'blue.500' }}>Forgot Password?</Link>
-                </Text>
+                <HStack>
+                    <Text mt={4} textAlign="center">
+                        Don't have an account?{' '}
+                    </Text>
+                    <Link to="/register">
+                        <Text mt={4} color='blue.500'>
+                            Register here
+                        </Text>
+                    </Link>
+                </HStack>
+
+                <HStack style={{justifyContent:'center'}}>
+                    <Link to="/forgot-password" >
+                        <Text mt={3} color='blue.500'>
+                            Forgot Password?
+                        </Text>
+                    </Link>
+                </HStack>
             </Box>
         </Container>
     )
