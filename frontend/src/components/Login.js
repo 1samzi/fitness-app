@@ -86,6 +86,7 @@ function Login() {
                 if (response.ok) {
                     const data = await response.json()
                     localStorage.setItem("token", data.data.token)
+                    localStorage.setItem("userId", data.data.userData._id);
                     toast({
                         title: "Login Successful",
                         description: "You have successfully logged in.",

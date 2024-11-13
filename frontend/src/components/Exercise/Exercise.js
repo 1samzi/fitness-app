@@ -28,7 +28,7 @@ const submit = (event) => {
     const durationTime = parseFloat(duration);
 
     switch (exercise) {
-      case 'Running':
+      case 'Cardio':
         switch (intensity) {
           case 'High':
             calories = durationTime * 15;
@@ -44,7 +44,7 @@ const submit = (event) => {
         }
         break;
 
-      case 'Cycling':
+      case 'Strength':
         switch (intensity) {
           case 'High':
             calories = durationTime * 12;
@@ -60,16 +60,16 @@ const submit = (event) => {
         }
         break;
 
-      case 'Weightlifting':
+      case 'Stretching':
         switch (intensity) {
           case 'High':
-            calories = durationTime * 10;
+            calories = durationTime * 6;
             break;
           case 'Moderate':
-            calories = durationTime * 7;
+            calories = durationTime * 4;
             break;
           case 'Low':
-            calories = durationTime * 4;
+            calories = durationTime * 2;
             break;
           default:
             break;
@@ -87,8 +87,8 @@ const submit = (event) => {
 
 
   return (
-    <Box p={4} maxW="500px" mx="auto">     
-      <NavBar /> 
+    <Box>     
+      <NavBar />
       <Text fontSize="24px" mb={4}>Log Your Exercise</Text> 
       {message && <Text color="green" mb={4}>{message}</Text>}
       <form onSubmit={submit}>  
@@ -101,9 +101,9 @@ const submit = (event) => {
             value={formData.exercise}
             onChange={handleChange}
           >
-            <option value="Running">Running</option>
-            <option value="Cycling">Cycling</option>
-            <option value="Weightlifting">Weightlifting</option>
+            <option value="Cardio">Cardio</option>
+            <option value="Strength">Strength Training</option>
+            <option value="Stretching">Stretching</option>
           </Select>
         </FormControl>
         
