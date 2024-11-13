@@ -7,7 +7,7 @@ const moment = require('moment');
 const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const { generatePassword, generateOTP, sendEmail, generateRandomPassword, validPassword } = require('../helpers/commonfile');
+const { generatePassword, generateOTP, sendEmail, generateRandomPassword, validPassword, emailTemplate } = require('../helpers/commonfile');
 const { userLogin } = require('./user.controllers');
 const otpColl = db.collection('OTP');
 
@@ -31,29 +31,7 @@ const forgotPassword = async (req, res, next) => {
         let updateUserData = await query.findOneAndUpdate(userColl, reqData, { $set: { password: encryptPass } });
 
         const emailSubject = 'Fitness App: Reseted password'
-        const emailBody = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <h2 style="color: #4CAF50;">Password Reset Request</h2>
-            <p>Hello,</p>
-            <p>We received a request to reset your password. Here is your new temporary password:</p>
-            <p style="font-size: 1.2em; font-weight: bold; color: #d9534f;">${generatedPass}</p>
-            
-            <p>To complete the process, please click the link below to verify your email and proceed:</p>
-            <table cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                    <td align="center" style="padding: 14px 0;">
-                        <a href="http://localhost:3000/verify-forgot-password/${req.body.email}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-family: Arial, sans-serif;">
-                            Verify Email
-                        </a>
-                    </td>
-                </tr>
-            </table>
-            
-            <p style="margin-top: 20px;">If you didn't request a password reset, you can safely ignore this email.</p>
-            
-            <p>Thanks, <br> The Fitness App Team</p>
-        </div>
-    `;
+        const emailBody = emailTemplate(generatedPass, req.body.email)
 
         await sendEmail(req.body.email, emailSubject, emailBody);
 
@@ -178,9 +156,40 @@ const verifyOTP = async (req, res, next) => {
     }
 };
 
+
+const adminResetPassword = async (req, res, next) => {
+    try {
+        const reqData = req.body
+
+        let userData = await query.findOne(userColl, { email: reqData.oldEmail });
+
+        if (!userData || userData.password == null) {
+            const message = `Incorrect email or password.`;
+            return next(new APIError(`${message}`, httpStatus.BAD_REQUEST, true));
+        }
+
+        const generatedPass = generateRandomPassword();
+        const encryptPass = generatePassword(generatedPass);
+
+        let updateUserData = await query.findOneAndUpdate(userColl, { email: reqData.oldEmail }, { $set: { password: encryptPass } });
+
+        const emailSubject = 'Fitness App: Reseted password'
+        const emailBody =  emailTemplate(generatedPass, req.body.oldEmail)
+
+        await sendEmail(reqData.newEmail, emailSubject, emailBody);
+
+        let obj = resPattern.successPattern(httpStatus.OK, updateUserData.ops, 'success');
+        return res.status(obj.code).json(obj)
+
+    } catch (e) {
+        return next(new APIError(`${e.message}`, httpStatus.BAD_REQUEST, true));
+    }
+}
+
 module.exports = {
     forgotPassword,
     resetPassword,
     generateAndSendOTP,
-    verifyOTP
+    verifyOTP,
+    adminResetPassword
 }

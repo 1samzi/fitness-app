@@ -103,6 +103,34 @@ let sendEmail = async (toEmail, subject, bodyHtml, attachments) => {
 //     })
 // });
 
+const emailTemplate = (generatedPass, email) => {
+
+    const emailBody = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #4CAF50;">Password Reset Request</h2>
+        <p>Hello,</p>
+        <p>We received a request to reset your password. Here is your new temporary password:</p>
+        <p style="font-size: 1.2em; font-weight: bold; color: #d9534f;">${generatedPass}</p>
+        
+        <p>To complete the process, please click the link below to verify your email and proceed:</p>
+        <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td align="center" style="padding: 14px 0;">
+                    <a href="http://localhost:3000/verify-forgot-password/${email}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-family: Arial, sans-serif;">
+                        Verify Email
+                    </a>
+                </td>
+            </tr>
+        </table>
+        
+        <p style="margin-top: 20px;">If you didn't request a password reset, you can safely ignore this email.</p>
+        
+        <p>Thanks, <br> The Fitness App Team</p>
+    </div>
+`;
+return emailBody;
+}
+
 
 module.exports = {
     validPassword,
@@ -112,5 +140,6 @@ module.exports = {
     // generateToken,
     generateOTP,
     sendEmail,
+    emailTemplate,
     // uploadS3
 }

@@ -14,4 +14,13 @@ router.route('/get-user')
 router.route('/getUserById/:Id')
     .get(protect, userCtrl.getUserById);
 
+router.route('/updateUser/:Id')
+    .post(protect, userCtrl.updateUserById);
+
+router.route('/updateUserEmail/:Id')
+    .post(protect, userCtrl.updateUserEmailFromAdmin);
+
+router.route('/deleteUserById/:Id')
+    .delete(protect, userCtrl.deleteUserById);
+
 module.exports = router;
