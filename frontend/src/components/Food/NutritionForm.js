@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react'
+
 import {
     Box,
     Button,
@@ -75,6 +76,18 @@ const NutritionForm = () => {
   //meals pulled from account
   const [meals, setMeals] = useState([]);
 
+  //dealing with date changing
+  const [currentDate, setCurrentDate] = useState(new Date()); 
+  const formatDate = (date) => date.toISOString().split('T')[0];
+
+  const adjustDate = (days) => {
+    setCurrentDate((prevDate) => {
+      const newDate = new Date(prevDate); 
+      newDate.setDate(newDate.getDate() + days);
+      return newDate; 
+    });
+  };
+
   // Modal state for section items
   const {
     isOpen: isSectionOpen,
@@ -136,6 +149,15 @@ const NutritionForm = () => {
       }
       const data = await response.json();
       console.log("API Data Hints:", data.hints);
+      if (data.hints.length === 0){
+        toast({
+          title: "No Food Item's Found",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       setFoodData(data.hints || []); 
       setCurrentPage(1);
     } catch (error) {
@@ -179,7 +201,7 @@ const NutritionForm = () => {
 
 
   const handleCloseDrawer = () => {
-    onClose();
+    onClose(); 
     // Delay clearing the selectedItem to prevent UI freeze
     setTimeout(() => {
       setSelectedItem(null);
@@ -208,9 +230,9 @@ const NutritionForm = () => {
     handleCloseDrawer();
   };
 
+  // Fetch meals for a given date when the date changes
   useEffect(() => {
     console.log(meals)
-    // Fetch meals when the component mounts
     const fetchMealsData = async () => {
       const fetchedMeals = await fetchMeals(); 
       if (fetchedMeals && fetchedMeals.length > 0) {
@@ -219,8 +241,9 @@ const NutritionForm = () => {
     };
   
     fetchMealsData(); 
-  }, []); 
+  }, [currentDate]); 
   
+  // Update meal whenever meals changes (happens on different day or whenever meals are added)
   useEffect(() => {
     
     if (meals.length > 0) {
@@ -235,6 +258,12 @@ const NutritionForm = () => {
       setDinnerItems(dinner);
       setSnackItems(snacks);
     }
+    else{
+      setBreakfastItems([]);
+      setLunchItems([]);
+      setDinnerItems([]);
+      setSnackItems([]);
+    }
   }, [meals]); 
 
   const adjustItemInSection = async (selectedSectionItem, quantity) =>{
@@ -248,8 +277,8 @@ const NutritionForm = () => {
     // Run an update call here
     try {
       // Send the updated meal data to the backend
-      const response = await fetch(`http://localhost:3001/api/user/update-meal/${userId}`, {
-        method: 'POST',
+      const response = await fetch(`http://localhost:3001/api/meal/update-meal/${selectedSectionItem._id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`, 
@@ -265,47 +294,20 @@ const NutritionForm = () => {
       }
     } catch (error) {
       console.error('Error updating meal:', error);
-    }
-
-    if (quantity === 0) {
-      removeItemFromState(selectedSectionItem);
-    }
-    
+    }  
     handleSectionClose(); 
-  };
-
-  const removeItemFromState = (selectedSectionItem) => {
-    const { section, _id } = selectedSectionItem;
-
-    switch (section) {
-      case 'Breakfast':
-        setBreakfastItems((prevItems) => prevItems.filter((item) => item._id !== _id));
-        break;
-      case 'Lunch':
-        setLunchItems((prevItems) => prevItems.filter((item) => item._id !== _id));
-        break;
-      case 'Dinner':
-        setDinnerItems((prevItems) => prevItems.filter((item) => item._id !== _id));
-        break;
-      case 'Snacks':
-        setSnackItems((prevItems) => prevItems.filter((item) => item._id !== _id));
-        break;
-      default:
-        console.error('Unknown section:', section);
-        break;
-    }
   };
 
   //Allow for a limit of going over 20% of total cals
   const maxAllowedQuantity = selectedItem
   ? Math.min(
-      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.calories || 1)) * 1.5),
+      Math.ceil(((calorieGoal - totalCalories) / (selectedItem.calories || 1)) * 1.8),
       maxServings
     )
   : 1;
 
   const adjustQuantity = selectedSectionItem ? Math.min(
-    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.calories || 1)) * 1.5),
+    Math.ceil(((calorieGoal - totalCalories) / (selectedSectionItem.calories || 1)) * 1.8),
     maxServings
     
   )
@@ -352,9 +354,9 @@ const getTotalMacros = () => {
 };
 
 async function addMealRequest(mealData) {
-  
+  const selectedDate = formatDate(currentDate);
   try {
-    const response = await fetch(`http://localhost:3001/api/user/log-meal/${userId}`, {
+    const response = await fetch(`http://localhost:3001/api/meal/log-meal/${userId}/?date=${selectedDate}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -373,9 +375,9 @@ async function addMealRequest(mealData) {
 }
 
 async function fetchMeals() {
-  const today = new Date().toISOString().split('T')[0]
+  const selectedDate = formatDate(currentDate);
   try {
-      const response = await fetch(`http://localhost:3001/api/user/get-meals/${userId}?date=${today}`, {
+      const response = await fetch(`http://localhost:3001/api/meal/get-meals/${userId}?date=${selectedDate}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -407,6 +409,12 @@ const totalMacros = getTotalMacros();
         <Box w="50%" p={8} mt={10} borderWidth={1} borderRadius={8} boxShadow="lg" mx="auto">
             <Center>
                 <Heading mb={6}>Track Your Meals</Heading>
+            </Center>
+            {/* Date Navigation */}
+            <Center mb={4}>
+              <Button onClick={() => adjustDate(-1)}>{'<'}</Button>
+              <Box mx={4} fontWeight="bold">{formatDate(currentDate)}</Box>
+              <Button onClick={() => adjustDate(1)}>{'>'}</Button>
             </Center>
               {/* Calorie Goal Progress Bar */}
             <VStack spacing={4} mt={4}>
