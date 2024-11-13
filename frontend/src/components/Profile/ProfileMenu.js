@@ -1,6 +1,7 @@
+'use client'
+
 import React, { useEffect, useState } from 'react'
 import {
-  Flex,
   Avatar,
   Menu,
   MenuButton,
@@ -8,53 +9,121 @@ import {
   MenuItem,
   MenuDivider,
   IconButton,
-  Button,
+  Flex,
+  Text,
   useToast,
 } from '@chakra-ui/react'
-import { MoreVertical } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { MoreVertical, User, LogOut } from 'lucide-react'
 import { jwtDecode } from 'jwt-decode'
+import { useNavigate } from 'react-router-dom'
 
-function ProfileMenu() {
+export default function ProfileMenu() {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
   const toast = useToast()
 
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('userData')
+    if (storedUserData) {
+      setUser(JSON.parse(storedUserData))
+    } else {
+      const token = localStorage.getItem('token')
+      if (token) {
+        try {
+          const decodedToken = jwtDecode(token)
+          fetchUserData(decodedToken._id, token)
+        } catch (error) {
+          console.error('Error decoding token:', error)
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again.",
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+          })
+          navigate('/login')
+        }
+      } else {
+        navigate('/login')
+      }
+    }
+  }, [navigate, toast])
+
+  const fetchUserData = async (userId, token) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch user data')
+      }
+
+      const data = await response.json()
+      setUser(data.data)
+      localStorage.setItem('userData', JSON.stringify(data.data))
+    } catch (error) {
+      console.error('Error fetching user data:', error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch user data. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      })
+    }
+  }
+
   const onSignOutClick = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("token")
+    localStorage.removeItem("userData")
     navigate('/login')
+    toast({
+      title: "Signed Out",
+      description: "You have been successfully logged out.",
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    })
   }
 
   const onProfileClick = () => {
     navigate('/profile')
   }
-  
+
+  if (!user) {
+    return null // or a loading spinner
+  }
+
   return (
-    <Flex alignItems={'center'} gap={2}>
-      <Avatar
-        size={'md'}
-        src={
-          'https://images.unsplash.com/photo-1493666438817-866a91353ca9?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&fit=crop&h=200&w=200&s=b616b2c5b373a80ffc9636ba24f7a4a9'
-        }
-        // name={`${user.firstName} ${user.lastName}`}
+    <Flex alignItems="center" gap={2}>
+      <Avatar 
+        name={`${user.firstName} ${user.lastName}`} 
+        size="sm"
+        bg="blue.500"
+        color="white"
       />
+      {/* <Text fontSize="sm" fontWeight="medium">{`${user.firstName} ${user.lastName}`}</Text> */}
       <Menu>
         <MenuButton
           as={IconButton}
-          aria-label={'More options'}
+          aria-label="Options"
           icon={<MoreVertical size={20} />}
-          variant={'ghost'}
-          size={'sm'}
+          variant="ghost"
+          size="sm"
         />
         <MenuList>
-          <MenuItem onClick={onProfileClick}>Profile</MenuItem>
+          <MenuItem icon={<User size={16} />} onClick={onProfileClick}>
+            Profile
+          </MenuItem>
           <MenuDivider />
-          <MenuItem onClick={onSignOutClick}>Sign out</MenuItem>
+          <MenuItem icon={<LogOut size={16} />} onClick={onSignOutClick}>
+            Sign out
+          </MenuItem>
         </MenuList>
       </Menu>
     </Flex>
   )
 }
-
-export default ProfileMenu

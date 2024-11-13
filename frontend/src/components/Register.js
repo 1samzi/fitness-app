@@ -73,7 +73,14 @@ function Register() {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        if (name !== 'confirmPassword') {
+        if (name === 'height' || name === 'weight') {
+            const numValue = parseFloat(value);
+            const sanitizedValue = isNaN(numValue) ? '' : Math.max(0, numValue).toString();
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: sanitizedValue,
+            }));
+        } else if (name !== 'confirmPassword') {
             setFormData((prevData) => ({
                 ...prevData,
                 [name]: value,
@@ -248,6 +255,7 @@ function Register() {
                                     type="date"
                                     value={formData.dateOfBirth}
                                     onChange={handleChange}
+                                    max={new Date().toLocaleDateString('en-CA')}
                                 />
                                 <FormErrorMessage>{errors.dateOfBirth}</FormErrorMessage>
                             </FormControl>
@@ -273,6 +281,8 @@ function Register() {
                                         value={formData.height}
                                         onChange={handleChange}
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                     />
                                     <InputRightElement width="4.5rem">
                                         <Select
@@ -296,6 +306,8 @@ function Register() {
                                         value={formData.weight}
                                         onChange={handleChange}
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                     />
                                     <InputRightElement width="4.5rem">
                                         <Select
