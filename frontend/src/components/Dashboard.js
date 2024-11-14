@@ -10,80 +10,26 @@ import {
     Container,
     VStack,
     Text,
-    Flex,
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { AgCharts } from 'ag-charts-react';
 
- // TODO: need to be dynamic data from chart
-const getData = () => {
-    return [
-        { asset: "Carbohydrates", amount: 55 },
-        { asset: "Protein", amount: 20 },
-        { asset: "Fats", amount: 30 }
-    ];
-}
-
 function Dashboard() {
-    // Dummy profile data
-    const dummyProfile = {
-        firstName: "John",
-        lastName: "Doe",
-        sex: "Male",
-        age: 28,
-        height: 175, // cm
-        weight: 70,  // kg
-        fitnessGoal: "Build muscle",
-    };
-
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        async function fetchProfile() {
-            try {
-                // Simulate a failing API call
-                throw new Error("Backend not available");
-
-                /* Uncomment when ready to pull data from backend
-                 const response = await fetch('/api/user/profile');
-                 const data = await response.json();
-                 setProfile(data); */
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-                setProfile(dummyProfile);  // Use dummy data for now
-            } finally {
-                setLoading(false);
-            }
-        }
-        fetchProfile();
-    }, []);
-
-    // TODO: need to be dynamic data
-    const [exerciseLogs, setExerciseLogs] = useState([
-        { activity: 'Cardio', minutes: 30, calories: 300 },
-        { activity: 'Strength Training', minutes: 45, calories: 400 },
-        { activity: 'Stretching', minutes: 60, calories: 200 },
-    ]);
-
-    // TODO: need to be dynamic data
-    const [macroNutrients, setMacroNutrients] = useState([
-        { name: 'Carbohydrates', total: 130, percentage: 55, goal: 50 },
-        { name: 'Protein', total: 50, percentage: 20, goal: 25 },
-        { name: 'Fats', total: 50, percentage: 30, goal: 25 },
-    ]);
-
-    const [options, setOptions] = useState({
-        data: getData(),
+    const [exerciseLogs, setExerciseLogs] = useState([]);
+    const [macroNutrients, setMacroNutrients] = useState([]);
+    const [chartOptions, setChartOptions] = useState({
+        data: [],
         title: {
-            text: "Portfolio Composition",
+            text: "Macronutrient Distribution",
         },
         series: [
             {
                 type: "pie",
-                angleKey: "amount",
-                calloutLabelKey: "asset",
-                sectorLabelKey: "amount",
+                angleKey: "percentage",
+                calloutLabelKey: "name",
+                sectorLabelKey: "percentage",
                 sectorLabel: {
                     color: "white",
                     fontWeight: "bold"
@@ -91,6 +37,106 @@ function Dashboard() {
             },
         ],
     });
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const today = new Date().toISOString().split('T')[0];
+
+        const fetchProfile = async () => {
+            try {
+                const response = await fetch(`http://localhost:3001/api/user/profile/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    setProfile(result.data);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+                setProfile({
+                    firstName: "John",
+                    lastName: "Doe",
+                    sex: "Male",
+                    age: 28,
+                    height: 175,
+                    weight: 70,
+                    fitnessGoal: "Build muscle",
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const fetchExerciseLogs = async () => {
+            try {
+                const response = await fetch(`http://localhost:3001/api/user/get-exercise-logs/${userId}?date=${today}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    setExerciseLogs(result.data);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error("Error fetching exercise logs:", error.message);
+                setExerciseLogs([
+                    { activity: 'Cardio', minutes: 30, calories: 300 },
+                    { activity: 'Strength Training', minutes: 45, calories: 400 },
+                    { activity: 'Stretching', minutes: 60, calories: 200 },
+                ]);
+            }
+        };
+
+        const fetchMacroNutrients = async () => {
+            try {
+                const response = await fetch(`http://localhost:3001/api/user/get-macro-nutrients/${userId}?date=${today}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    setMacroNutrients(result.data);
+                    setChartOptions((prevOptions) => ({
+                        ...prevOptions,
+                        data: result.data,
+                    }));
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error("Error fetching macronutrients:", error.message);
+                const dummyData = [
+                    { name: 'Carbohydrates', total: 130, percentage: 55, goal: 50 },
+                    { name: 'Protein', total: 50, percentage: 20, goal: 25 },
+                    { name: 'Fats', total: 50, percentage: 30, goal: 25 },
+                ];
+                setMacroNutrients(dummyData);
+                setChartOptions((prevOptions) => ({
+                    ...prevOptions,
+                    data: dummyData,
+                }));
+            }
+        };
+
+        fetchProfile();
+        fetchExerciseLogs();
+        fetchMacroNutrients();
+    }, []);
 
     return (
         <Box>
@@ -124,9 +170,6 @@ function Dashboard() {
                         <Heading as="h2" size="lg" mb={4}>
                             Exercise Log
                         </Heading>
-                        <Box width="100%" maxWidth="auto" margin="0 auto">
-                            <AgCharts options={options} />
-                        </Box>
                         <Table variant="striped" colorScheme="teal">
                             <Thead>
                                 <Tr>
@@ -153,7 +196,7 @@ function Dashboard() {
                             Macro-nutrients
                         </Heading>
                         <Box width="100%" maxWidth="auto" margin="0 auto">
-                            <AgCharts options={options} />
+                            <AgCharts options={chartOptions} />
                         </Box>
                         <Table variant="striped" colorScheme="teal" mt={6}>
                             <Thead>
