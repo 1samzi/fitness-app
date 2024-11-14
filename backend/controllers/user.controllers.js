@@ -291,6 +291,85 @@ const updateMeal = async (req, res, next) => {
     }
 };
 
+const getTodayMacros = async (req, res, next) => {
+    try {
+        const userId = req.params.Id;
+        const date = new Date().toISOString().split('T')[0];
+        
+        const user = await userColl.findOne({ _id: ObjectId(userId) });
+        if (!user) return next(new APIError('User not found', httpStatus.NOT_FOUND, true));
+
+        const todayMeals = user.meals.filter(meal => meal.date === date);
+        const totalMacros = todayMeals.reduce((totals, meal) => {
+            totals.protein += meal.nutrients.protein * meal.quantity;
+            totals.fat += meal.nutrients.fat * meal.quantity;
+            totals.carbohydrates += meal.nutrients.carbohydrates * meal.quantity;
+            return totals;
+        }, { protein: 0, fat: 0, carbohydrates: 0 });
+
+        res.status(200).json({
+            code: 200,
+            message: 'Macro-nutrients for today fetched successfully',
+            data: totalMacros,
+        });
+    } catch (e) {
+        return next(new APIError(e.message, httpStatus.BAD_REQUEST, true));
+    }
+};
+
+const logExercise = async (req, res, next) => {
+    try {
+        const userId = req.params.Id;
+        const { exercise, duration, intensity, calories, date } = req.body;
+
+        const exerciseEntry = {
+            activity: exercise,
+            minutes: duration,  
+            intensity: intensity,
+            calories: calories,
+            date: date
+        };
+
+        const result = await userColl.updateOne(
+            { _id: ObjectId(userId) },
+            { $push: { exerciseLogs: exerciseEntry } }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json({ message: 'Exercise logged successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getExerciseLogs = async (req, res, next) => {
+    try {
+        const userId = req.params.Id;
+        const { date } = req.query;
+
+        const user = await userColl.findOne(
+            { _id: ObjectId(userId) },
+            { projection: { exerciseLogs: 1 } }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const exerciseLogsForDate = user.exerciseLogs?.filter(log => log.date === date).map(log => ({
+            activity: log.activity,
+            minutes: log.minutes,
+            calories: log.calories
+        })) || [];
+
+        res.status(200).json({ data: exerciseLogsForDate });
+    } catch (error) {
+        next(error);
+    }
+};
 
 module.exports = {
     registerUsers,
@@ -302,5 +381,8 @@ module.exports = {
     updateMeal,
     updateUserById,
     updateUserEmailFromAdmin,
-    deleteUserById
+    deleteUserById,
+    getTodayMacros,
+    logExercise,
+    getExerciseLogs
 }
