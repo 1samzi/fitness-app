@@ -4,11 +4,9 @@ import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'r
 import Login from './components/Login'
 import Register from './components/Register'
 import Home from './components/Home'
-import Dashboard from './components/Dashboard'
 import NutritionForm from './components/Food/NutritionForm'
 import Exercise from './components/Exercise/Exercise'
 import Profile from './components/Profile/Profile'
-import Setting from './components/Profile/Setting'
 import ForgotPassword from './components/ForgotPassword'
 import VerifyForgotPassword from './components/VerifyForgotPassword'
 import TwoFactorAuth from './components/Admin/TwoFactorAuth'
@@ -40,13 +38,12 @@ function App() {
             <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
             
             <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            {/* <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} /> */}
             <Route path="/nutrition-form" element={<PrivateRoute><NutritionForm /></PrivateRoute>} />
             <Route path="/exercise" element={<PrivateRoute><Exercise /></PrivateRoute>} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-            <Route path="/setting" element={<PrivateRoute><Setting /></PrivateRoute>} />
             <Route path="/admin-home" element={<PrivateRoute><AdminHome /></PrivateRoute>} />
-            <Route path="/user-activity" element={<PrivateRoute><UserActivity /></PrivateRoute>} />
+            <Route path="/user-activity/:id" element={<PrivateRoute><UserActivity /></PrivateRoute>} />
           </Routes>
         </Box>
       </Router>
