@@ -1,12 +1,6 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const nodeMailer = require('nodemailer');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-const path = require('path');
 const dotenv = require('dotenv');
-const { v4: uuidv4 } = require('uuid');
-const s3 = require('../config/awsS3');
 
 dotenv.config();
 
@@ -22,14 +16,6 @@ const safeModel = () => {
 const generatePassword = (password) => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), process.env.PASS_SECRET);
 };
-
-// const generateToken = () => {
-//     return jwt.sign({
-//         _id: this._id,
-//         username: this.username,
-//         type: this.type
-//     }, process.env.JWT_SECRET)
-// }
 
 // generate Random Password
 
@@ -87,21 +73,33 @@ let sendEmail = async (toEmail, subject, bodyHtml, attachments) => {
     });
 };
 
+const emailTemplate = (generatedPass, email) => {
 
-// upload s3
-// const uploadS3 = multer({
-//     storage: multerS3({
-//         s3: s3,
-//         bucket: process.env.AWS_BUCKET_NAME,
-//         acl: 'public-read',
-//         key: function (req, file, cb) {
-//             const extname = path.extname(file.originalname);
-//             const key = path.basename(file.originalname, extname) + '-' + uuidv4() + extname;
-//             cb(null, key);
-//         },
-//         limits: { fileSize: 5000000000 }, // In bytes: 5000000000 bytes = 5 GB
-//     })
-// });
+    const emailBody = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #4CAF50;">Password Reset Request</h2>
+        <p>Hello,</p>
+        <p>We received a request to reset your password. Here is your new temporary password:</p>
+        <p style="font-size: 1.2em; font-weight: bold; color: #d9534f;">${generatedPass}</p>
+        
+        <p>To complete the process, please click the link below to verify your email and proceed:</p>
+        <table cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td align="center" style="padding: 14px 0;">
+                    <a href="http://localhost:3000/verify-forgot-password/${email}" style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: #fff; text-decoration: none; border-radius: 5px; font-family: Arial, sans-serif;">
+                        Verify Email
+                    </a>
+                </td>
+            </tr>
+        </table>
+        
+        <p style="margin-top: 20px;">If you didn't request a password reset, you can safely ignore this email.</p>
+        
+        <p>Thanks, <br> The Fitness App Team</p>
+    </div>
+`;
+return emailBody;
+}
 
 
 module.exports = {
@@ -109,8 +107,7 @@ module.exports = {
     safeModel,
     generateRandomPassword,
     generatePassword,
-    // generateToken,
     generateOTP,
     sendEmail,
-    // uploadS3
+    emailTemplate
 }

@@ -8,7 +8,6 @@ function Home({ onLogout }) {
     const navigate = useNavigate()
 
     const handleLogout = () => {
-        // onLogout()
         localStorage.removeItem("token");
         navigate('/login')
     }

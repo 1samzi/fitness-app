@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Box,
@@ -12,6 +12,7 @@ import {
 } from '@chakra-ui/react'
 import { Menu as MenuIcon, X } from 'lucide-react'
 import ProfileMenu from './Profile/ProfileMenu'
+import { jwtDecode } from 'jwt-decode'
 
 const Links = [
   {
@@ -20,9 +21,16 @@ const Links = [
   }, {
     'name': 'Log Food',
     'link': '/nutrition-form'
-  }, {    
+  }, {
     'name': 'Exercise',
     'link': '/exercise'
+  }
+]
+
+const adminLinks = [
+  {
+    'name': 'Home',
+    'link': '/admin-home'
   }
 ]
 
@@ -58,7 +66,20 @@ const NavLink = ({ children, to }) => {
 
 export default function NavBar() {
   const { isOpen, onOpen, onClose } = useDisclosure()
+  const [userType, setUserType] = useState(null);
   const bgColor = useColorModeValue('gray.100', 'gray.900')
+
+  const authToken = localStorage.getItem('token');
+
+  useEffect(() => {
+    const userData = jwtDecode(authToken);
+    const authUserType = userData.userType
+    setUserType(authUserType);
+
+  }, [authToken]);
+
+
+  console.log(userType);
 
   return (
     <Box bg={bgColor} px={4}>
@@ -71,12 +92,19 @@ export default function NavBar() {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems={'center'}>
-          <Box>Logo</Box>
-          <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
-            {Links.map((link) => (
-              <NavLink key={link.name} to={link.link}>{link.name}</NavLink>
-            ))}
-          </HStack>
+          {userType != 'admin' ? (
+            <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
+              {Links.map((link) => (
+                <NavLink key={link.name} to={link.link}>{link.name}</NavLink>
+              ))}
+            </HStack>
+          ) : (
+            <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
+              {adminLinks.map((link) => (
+                <NavLink key={link.name} to={link.link}>{link.name}</NavLink>
+              ))}
+            </HStack>
+          )}
         </HStack>
         <ProfileMenu />
       </Flex>

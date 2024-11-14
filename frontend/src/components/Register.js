@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
     Box,
     Container,
@@ -14,7 +14,8 @@ import {
     FormControl,
     FormLabel,
     FormErrorMessage,
-    useToast
+    useToast,
+    HStack
 } from '@chakra-ui/react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -26,11 +27,12 @@ function Register() {
         firstName: '',
         lastName: '',
         sex: '',
-        age: '',
+        dateOfBirth: '',
         height: '',
-        heightUnit: 'cm', // set deadult values
+        heightUnit: 'cm',
         weight: '',
-        weightUnit: 'Kg', //set default values
+        weightUnit: 'Kg',
+        goal: '',
         email: '',
         password: '',
     })
@@ -57,6 +59,10 @@ function Register() {
                     : 'Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.'
             case 'confirmPassword':
                 return value === formData.password ? '' : 'Passwords do not match.'
+            case 'dateOfBirth':
+                return value ? '' : 'Date of birth is required.'
+            case 'goal':
+                return value ? '' : 'Please select a fitness goal.'
             default:
                 return ''
         }
@@ -64,23 +70,48 @@ function Register() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-    
-        // Only update formData if name is not 'confirmPassword'
-        if (name !== 'confirmPassword') {
+
+        if (name === 'height' || name === 'weight') {
+            const numValue = parseFloat(value);
+            const sanitizedValue = isNaN(numValue) ? '' : Math.max(0, numValue).toString();
+            setFormData((prevData) => ({
+                ...prevData,
+                [name]: sanitizedValue,
+            }));
+        } else if (name !== 'confirmPassword') {
             setFormData((prevData) => ({
                 ...prevData,
                 [name]: value,
             }));
         }
-    
-        // Validate field and update errors, including confirmPassword if needed
+
         const error = validateField(name, value);
         setErrors((prevErrors) => ({
             ...prevErrors,
             [name]: error,
         }));
     };
-    
+
+    const calculateAge = (dateOfBirth) => {
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
+    useEffect(() => {
+        if (formData.dateOfBirth) {
+            const age = calculateAge(formData.dateOfBirth);
+            setFormData(prevData => ({
+                ...prevData,
+                age: age.toString()
+            }));
+        }
+    }, [formData.dateOfBirth]);
 
     const handleUnitChange = (field, newUnit) => {
         setFormData((prevData) => {
@@ -90,12 +121,12 @@ function Register() {
 
             if (oldValue) {
                 if (field === 'height') {
-                    newValue = newUnit === 'cm' 
-                        ? (parseFloat(oldValue) * 2.54).toFixed(2) 
+                    newValue = newUnit === 'cm'
+                        ? (parseFloat(oldValue) * 2.54).toFixed(2)
                         : (parseFloat(oldValue) / 2.54).toFixed(2)
                 } else if (field === 'weight') {
-                    newValue = newUnit === 'kg' 
-                        ? (parseFloat(oldValue) / 2.2046).toFixed(2) 
+                    newValue = newUnit === 'kg'
+                        ? (parseFloat(oldValue) / 2.2046).toFixed(2)
                         : (parseFloat(oldValue) * 2.2046).toFixed(2)
                 }
             }
@@ -122,7 +153,7 @@ function Register() {
             try {
                 const response = await fetch('http://localhost:3001/api/user/create-user', {
                     method: 'POST',
-                    headers: {      
+                    headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(formData),
@@ -138,7 +169,6 @@ function Register() {
                     })
 
                     navigate('/login')
-                    // You might want to redirect the user or clear the form here
                 } else {
                     const errorData = await response.json()
                     throw new Error(errorData.error || 'Registration failed')
@@ -215,17 +245,30 @@ function Register() {
                                     <option value='other'>Other</option>
                                 </Select>
                             </FormControl>
+                            <FormControl isRequired isInvalid={errors.dateOfBirth}>
+                                <FormLabel htmlFor="dateOfBirth">Date of Birth</FormLabel>
+                                <Input
+                                    id="dateOfBirth"
+                                    name="dateOfBirth"
+                                    type="date"
+                                    value={formData.dateOfBirth}
+                                    onChange={handleChange}
+                                    max={new Date().toLocaleDateString('en-CA')}
+                                />
+                                <FormErrorMessage>{errors.dateOfBirth}</FormErrorMessage>
+                            </FormControl>
                             <FormControl>
                                 <FormLabel htmlFor="age">Age</FormLabel>
                                 <Input
                                     id="age"
                                     name="age"
-                                    placeholder='Enter your age'
                                     value={formData.age}
-                                    onChange={handleChange}
-                                    type="number"
+                                    readOnly
+                                    placeholder="Calculated from DOB"
                                 />
                             </FormControl>
+                        </SimpleGrid>
+                        <SimpleGrid columns={[1, null, 2]} spacing={6}>
                             <FormControl>
                                 <FormLabel htmlFor="height">Height</FormLabel>
                                 <InputGroup>
@@ -236,11 +279,13 @@ function Register() {
                                         value={formData.height}
                                         onChange={handleChange}
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                     />
                                     <InputRightElement width="4.5rem">
-                                        <Select 
-                                            value={formData.heightUnit} 
-                                            onChange={(e) => handleUnitChange('height', e.target.value)} 
+                                        <Select
+                                            value={formData.heightUnit}
+                                            onChange={(e) => handleUnitChange('height', e.target.value)}
                                             size="sm"
                                         >
                                             <option value="cm">cm</option>
@@ -249,9 +294,7 @@ function Register() {
                                     </InputRightElement>
                                 </InputGroup>
                             </FormControl>
-                        </SimpleGrid>
-                        <SimpleGrid columns={[1, null, 2]} spacing={6}>
-                        <FormControl>
+                            <FormControl>
                                 <FormLabel htmlFor="weight">Weight</FormLabel>
                                 <InputGroup>
                                     <Input
@@ -261,11 +304,13 @@ function Register() {
                                         value={formData.weight}
                                         onChange={handleChange}
                                         type="number"
+                                        min="0"
+                                        step="0.01"
                                     />
                                     <InputRightElement width="4.5rem">
-                                        <Select 
-                                            value={formData.weightUnit} 
-                                            onChange={(e) => handleUnitChange('weight', e.target.value)} 
+                                        <Select
+                                            value={formData.weightUnit}
+                                            onChange={(e) => handleUnitChange('weight', e.target.value)}
                                             size="sm"
                                         >
                                             <option value="kg">kg</option>
@@ -274,19 +319,34 @@ function Register() {
                                     </InputRightElement>
                                 </InputGroup>
                             </FormControl>
-                            <FormControl isInvalid={errors.email}>
-                                <FormLabel htmlFor="email">Email</FormLabel>
-                                <Input
-                                    id="email"
-                                    name="email"
-                                    placeholder='Enter your Email'
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    type="email"
-                                />
-                                <FormErrorMessage>{errors.email}</FormErrorMessage>
-                            </FormControl>
                         </SimpleGrid>
+                        <FormControl isRequired isInvalid={errors.goal}>
+                            <FormLabel htmlFor="goal">Fitness Goal</FormLabel>
+                            <Select
+                                id="goal"
+                                name="goal"
+                                placeholder='Select your goal'
+                                value={formData.goal}
+                                onChange={handleChange}
+                            >
+                                <option value='Maintain Weight'>Maintain Weight</option>
+                                <option value='Gain Weight'>Gain Weight</option>
+                                <option value='Lose Weight'>Lose Weight</option>
+                            </Select>
+                            <FormErrorMessage>{errors.goal}</FormErrorMessage>
+                        </FormControl>
+                        <FormControl isInvalid={errors.email}>
+                            <FormLabel htmlFor="email">Email</FormLabel>
+                            <Input
+                                id="email"
+                                name="email"
+                                placeholder='Enter your Email'
+                                value={formData.email}
+                                onChange={handleChange}
+                                type="email"
+                            />
+                            <FormErrorMessage>{errors.email}</FormErrorMessage>
+                        </FormControl>
                         <FormControl isInvalid={errors.password}>
                             <FormLabel htmlFor="password">Password</FormLabel>
                             <InputGroup>
@@ -314,7 +374,6 @@ function Register() {
                                     name="confirmPassword"
                                     type={showConfirm ? 'text' : 'password'}
                                     placeholder='Confirm password'
-                                    value={formData.confirmPassword}
                                     onChange={handleChange}
                                 />
                                 <InputRightElement width="4.5rem">
@@ -328,14 +387,17 @@ function Register() {
                         <Button type="submit" colorScheme="blue" size="lg">
                             Register
                         </Button>
-                        <Text>
-                            Already have an account?
+                        <HStack>
+                            <Text>
+                                Already have an account?
+                            </Text>
                             <Link to="/login">
-                                <span className='about-link-text'>
+                                <Text className='about-link-text' color='blue.500' >
                                     Login
-                                </span>
+                                </Text>
                             </Link>
-                        </Text>
+
+                        </HStack>
                     </VStack>
                 </form>
             </Box>
