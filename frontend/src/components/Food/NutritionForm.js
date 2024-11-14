@@ -243,7 +243,7 @@ const NutritionForm = () => {
     fetchMealsData(); 
   }, [currentDate]); 
   
-  // Update meal whenever meals changes (happens on different day or whenever meals are added)
+  // Update meal whenever meals changes (happens on different day or whenever meals are added/adjusted)
   useEffect(() => {
     
     if (meals.length > 0) {
@@ -268,7 +268,7 @@ const NutritionForm = () => {
 
   const adjustItemInSection = async (selectedSectionItem, quantity) =>{
     
-    // Update the quantity if it's greater than zero
+    // Update the quantity set for the updated value
     const updatedItem = {
       ...selectedSectionItem,
       quantity: quantity,
