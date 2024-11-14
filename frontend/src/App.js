@@ -38,7 +38,6 @@ function App() {
             <Route path="/two-factor-auth" element={<TwoFactorAuth />} />
             
             <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-            {/* <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} /> */}
             <Route path="/nutrition-form" element={<PrivateRoute><NutritionForm /></PrivateRoute>} />
             <Route path="/exercise" element={<PrivateRoute><Exercise /></PrivateRoute>} />
             <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />

@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useState, useEffect } from 'react'
 import {
   Box,
@@ -187,20 +185,6 @@ function AdminHome() {
             type={'increase'}
             icon={FiUsers}
           />
-          {/* <StatCard
-            title={'Revenue'}
-            stat={'$34,000'}
-            helpText={'8% increase'}
-            type={'increase'}
-            icon={FiDollarSign}
-          />
-          <StatCard
-            title={'Bounce Rate'}
-            stat={'27%'}
-            helpText={'3% decrease'}
-            type={'decrease'}
-            icon={FiActivity}
-          /> */}
           <StatCard
             title={'Active Goals'}
             stat={goalData.length}
