@@ -32,4 +32,13 @@ router.route('/get-meals/:Id')
 router.route('/update-meal/:Id')
 .post(protect, userCtrl.updateMeal)
 
+router.route('/get-macros/:Id')
+    .get(protect, userCtrl.getTodayMacros);
+
+router.route('/log-exercise/:Id')
+.post(protect, userCtrl.logExercise);
+
+router.route('/get-exercise-logs/:Id')
+.get(protect, userCtrl.getExerciseLogs);
+
 module.exports = router;
