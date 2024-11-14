@@ -13,12 +13,20 @@ import {
 } from '@chakra-ui/react';
 import React, { useState, useEffect } from 'react';
 import { AgCharts } from 'ag-charts-react';
+import { jwtDecode } from 'jwt-decode';
+
 
 function Dashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [exerciseLogs, setExerciseLogs] = useState([]);
     const [macroNutrients, setMacroNutrients] = useState([]);
+
+    const token = localStorage.getItem('token');
+    const decodedToken = jwtDecode(token);
+    const userId = decodedToken._id;
+    const today = new Date().toISOString().split('T')[0];
+
     const [chartOptions, setChartOptions] = useState({
         data: [],
         title: {
@@ -27,9 +35,9 @@ function Dashboard() {
         series: [
             {
                 type: "pie",
-                angleKey: "percentage",
+                angleKey: "value",
                 calloutLabelKey: "name",
-                sectorLabelKey: "percentage",
+                sectorLabelKey: "value",
                 sectorLabel: {
                     color: "white",
                     fontWeight: "bold"
@@ -39,104 +47,103 @@ function Dashboard() {
     });
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        const userId = localStorage.getItem('userId');
-        const today = new Date().toISOString().split('T')[0];
+        fetchProfile();
+        fetchMacroNutrients();
+        fetchExerciseLogs();
+    }, []);
 
-        const fetchProfile = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/api/user/profile/${userId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    setProfile(result.data);
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                console.error("Error fetching profile:", error);
-                setProfile({
-                    firstName: "John",
-                    lastName: "Doe",
-                    sex: "Male",
-                    age: 28,
-                    height: 175,
-                    weight: 70,
-                    fitnessGoal: "Build muscle",
-                });
-            } finally {
-                setLoading(false);
+    const fetchExerciseLogs = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/user/get-exercise-logs/${userId}?date=${today}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
+            if (response.ok) {
+                setExerciseLogs(result.data);
+            } else {
+                throw new Error(result.message);
             }
-        };
+        } catch (error) {
+            console.error("Error fetching exercise logs:", error.message);
+            setExerciseLogs([
+                { activity: 'Cardio', minutes: 30, calories: 300 },
+                { activity: 'Strength Training', minutes: 45, calories: 400 },
+                { activity: 'Stretching', minutes: 60, calories: 200 },
+            ]);
+        }
+    };
 
-        const fetchExerciseLogs = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/api/user/get-exercise-logs/${userId}?date=${today}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    setExerciseLogs(result.data);
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                console.error("Error fetching exercise logs:", error.message);
-                setExerciseLogs([
-                    { activity: 'Cardio', minutes: 30, calories: 300 },
-                    { activity: 'Strength Training', minutes: 45, calories: 400 },
-                    { activity: 'Stretching', minutes: 60, calories: 200 },
-                ]);
-            }
-        };
-
-        const fetchMacroNutrients = async () => {
-            try {
-                const response = await fetch(`http://localhost:3001/api/user/get-macro-nutrients/${userId}?date=${today}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    setMacroNutrients(result.data);
-                    setChartOptions((prevOptions) => ({
-                        ...prevOptions,
-                        data: result.data,
-                    }));
-                } else {
-                    throw new Error(result.message);
-                }
-            } catch (error) {
-                console.error("Error fetching macronutrients:", error.message);
-                const dummyData = [
-                    { name: 'Carbohydrates', total: 130, percentage: 55, goal: 50 },
-                    { name: 'Protein', total: 50, percentage: 20, goal: 25 },
-                    { name: 'Fats', total: 50, percentage: 30, goal: 25 },
+    const fetchMacroNutrients = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/user/get-macros/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
+            if (response.ok) {
+                const macrosData = [
+                    { name: 'Protein', value: result.data.protein },
+                    { name: 'Fat', value: result.data.fat },
+                    { name: 'Carbohydrates', value: result.data.carbohydrates },
                 ];
-                setMacroNutrients(dummyData);
+                setMacroNutrients(macrosData);
                 setChartOptions((prevOptions) => ({
                     ...prevOptions,
-                    data: dummyData,
+                    data: macrosData,
                 }));
+            } else {
+                throw new Error(result.message);
             }
-        };
+        } catch (error) {
+            console.error("Error fetching macronutrients:", error.message);
+            const dummyData = [
+                { name: 'Carbohydrates', value: 130 },
+                { name: 'Protein', value: 50 },
+                { name: 'Fat', value: 50 },
+            ];
+            setMacroNutrients(dummyData);
+            setChartOptions((prevOptions) => ({
+                ...prevOptions,
+                data: dummyData,
+            }));
+        }
+    };
 
-        fetchProfile();
-        fetchExerciseLogs();
-        fetchMacroNutrients();
-    }, []);
+    const fetchProfile = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
+            if (response.ok) {
+                setProfile(result.data);
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            setProfile({
+                firstName: "John",
+                lastName: "Doe",
+                sex: "Male",
+                age: 28,
+                height: 175,
+                weight: 70,
+                fitnessGoal: "Build muscle",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <Box>
@@ -203,17 +210,13 @@ function Dashboard() {
                                 <Tr>
                                     <Th>Macronutrient</Th>
                                     <Th>Total (grams)</Th>
-                                    <Th>Percentage of Daily Caloric Intake</Th>
-                                    <Th>Goal</Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
                                 {macroNutrients.map((nutrient, index) => (
                                     <Tr key={index}>
                                         <Td>{nutrient.name}</Td>
-                                        <Td>{nutrient.total}g</Td>
-                                        <Td>{nutrient.percentage}%</Td>
-                                        <Td>{nutrient.goal}%</Td>
+                                        <Td>{nutrient.value}g</Td>
                                     </Tr>
                                 ))}
                             </Tbody>
