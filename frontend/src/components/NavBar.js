@@ -79,9 +79,6 @@ export default function NavBar() {
 
   }, [authToken]);
 
-
-  console.log(userType);
-
   return (
     <Box bg={bgColor} px={4}>
       <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
