@@ -35,12 +35,10 @@ function Exercise() {
     }));
   };
 
-  const submit = (event) => {
-    event.preventDefault();
+  const calculateCalories = () => {
 
     const { exercise, duration, intensity } = formData;
     let calories = 0;
-    const durationTime = parseFloat(duration);
 
     if (exercise && duration && intensity) {    
       const durationTime = parseFloat(duration);
