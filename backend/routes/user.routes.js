@@ -23,13 +23,5 @@ router.route('/updateUserEmail/:Id')
 
 router.route('/deleteUserById/:Id')
     .delete(protect, userCtrl.deleteUserById);
-router.route('/log-meal/:Id')
-    .post(protect, userCtrl.addMeal);
-
-router.route('/get-meals/:Id')
-    .get(protect, userCtrl.getMealsByDate);
-    
-router.route('/update-meal/:Id')
-.post(protect, userCtrl.updateMeal)
 
 module.exports = router;
