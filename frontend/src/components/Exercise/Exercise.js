@@ -17,7 +17,9 @@ function Exercise() {
   const [formData, setFormData] = useState({ 
     exercise: '',
     duration: '',
-    intensity: ''
+    intensity: '',
+    weight:'',
+    unit: 'lbs' //Default is pounds
   });
   const [selectedDate, setSelectedDate] = useState(new Date());  
   const [message, setMessage] = useState('');
@@ -33,23 +35,28 @@ function Exercise() {
   const submit = (event) => {
     event.preventDefault();
 
-    const { exercise, duration, intensity } = formData;
+    const { exercise, duration, intensity, weight, unit } = formData;
     let calories = 0;
 
-    if (exercise && duration && intensity) {    
+    if (exercise && duration && intensity && weight) {    
       const durationTime = parseFloat(duration);
+      let weightPounds = parseFloat(weight);
+    
+        if (unit === 'kg') {
+            weightPounds = weightPounds * 2.20462;
+        }
 
       switch (exercise) {
         case 'Cardio':
           switch (intensity) {
             case 'High':
-              calories = durationTime * 15;
+              calories = durationTime * (weightPounds/320) * 15;
               break;
             case 'Moderate':
-              calories = durationTime * 10;
+              calories = durationTime * (weightPounds/320) *  10;
               break;
             case 'Low':
-              calories = durationTime * 5;
+              calories = durationTime * (weightPounds/320) * 5;
               break;
             default:
               break;
@@ -59,13 +66,13 @@ function Exercise() {
         case 'Strength':
           switch (intensity) {
             case 'High':
-              calories = durationTime * 12;
+              calories = durationTime * (weightPounds/320) * 12;
               break;
             case 'Moderate':
-              calories = durationTime * 8;
+              calories = durationTime * (weightPounds/320) * 8;
               break;
             case 'Low':
-              calories = durationTime * 4;
+              calories = durationTime * (weightPounds/320) * 4;
               break;
             default:
               break;
@@ -75,13 +82,13 @@ function Exercise() {
         case 'Stretching':
           switch (intensity) {
             case 'High':
-              calories = durationTime * 6;
+              calories = durationTime * (weightPounds/320) * 6;
               break;
             case 'Moderate':
-              calories = durationTime * 4;
+              calories = durationTime * (weightPounds/320) * 4;
               break;
             case 'Low':
-              calories = durationTime * 2;
+              calories = durationTime * (weightPounds/320) * 2;
               break;
             default:
               break;
@@ -127,7 +134,9 @@ function Exercise() {
               type="number"
               placeholder="Enter duration"
               value={formData.duration}
-              onChange={handleChange}/>
+              onChange={handleChange}
+              required 
+              min="0" />
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Intensity</FormLabel>
@@ -140,6 +149,27 @@ function Exercise() {
               <option value="Moderate">Moderate</option>
               <option value="High">High</option>
             </Select>
+          </FormControl>
+         <FormControl mb={3}>
+            <FormLabel>Weight</FormLabel>
+            <HStack>
+            <Input
+              name="weight"
+              type="number"
+              placeholder="Enter Weight"
+              value={formData.weight}
+              onChange={handleChange}
+              required
+              min="0" 
+            />
+            <Select 
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}>
+              <option value="lbs">lbs</option>
+              <option value ="kg">kg</option>
+             </Select>
+             </HStack>
           </FormControl>
           <Button colorScheme="blue" type="submit" mt={4}>Submit</Button>
         </VStack>
@@ -159,3 +189,4 @@ function Exercise() {
 }
 
 export default Exercise;
+
