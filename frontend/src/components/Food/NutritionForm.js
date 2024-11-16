@@ -35,11 +35,15 @@ import {
     ModalFooter,
     ModalBody,
     ModalCloseButton,
+    FormLabel,
+    HStack
   } from '@chakra-ui/react'
 
 import NavBar from '../NavBar'
 const appId = '6fe5132c';
 const appKey = '635f181a08b732a384c456a90d2b45f5';
+const token = localStorage.getItem('token');
+const userId = localStorage.getItem('userId');
 
 
 const ITEMS_PER_PAGE = 8;
@@ -51,10 +55,34 @@ const calorieGoal = 2000; // Set a calorie goal
 // handle items with 0 calories
 const maxServings = 30;
 
+let user;
+
+async function fetchUser() {
+  try {
+    const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const result = await response.json();
+    if (response.ok) {
+        return result.data;  
+    } else {
+        throw new Error(result.message);
+    }
+    
+  } catch (error) {
+      console.error("Error fetching meals:", error.message);
+  }
+}
+(async () => {
+  user = await fetchUser();
+})();
+
 const NutritionForm = () => {
-  const token = localStorage.getItem('token');
-  const userId = localStorage.getItem('userId');
-  
+
   const [query, setQuery] = useState('');  // Storing the search input
   const [foodData, setFoodData] = useState([]);  // API response data
   const toast = useToast(); // Error message pop ups
@@ -79,13 +107,42 @@ const NutritionForm = () => {
   //dealing with date changing
   const [currentDate, setCurrentDate] = useState(new Date()); 
   const formatDate = (date) => date.toISOString().split('T')[0];
-
   const adjustDate = (days) => {
     setCurrentDate((prevDate) => {
-      const newDate = new Date(prevDate); 
-      newDate.setDate(newDate.getDate() + days);
-      return newDate; 
+      const selectedDate = new Date(prevDate); 
+      const createdAtDate = new Date(user.createdAt);
+  
+      if (selectedDate < createdAtDate) {
+        selectedDate.setTime(createdAtDate.getTime()); 
+        toast({
+          title: `Dates cannot be before account creation (${formatDate(createdAtDate)}).`,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        selectedDate.setDate(selectedDate.getDate() + days);
+      }
+  
+      return selectedDate;
     });
+  };
+  
+  const handleDateChange = (event) => {
+    const selectedDate = new Date(event.target.value); 
+    const createdAtDate = new Date(user.createdAt);
+    if (selectedDate < createdAtDate) {
+      setCurrentDate(createdAtDate)
+      toast({
+        title: `Dates Cannot be before account creation. (${formatDate(createdAtDate)})`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+    else{
+      setCurrentDate(selectedDate)
+    }
   };
 
   // Modal state for section items
@@ -397,10 +454,11 @@ async function fetchMeals() {
 };
 
 
+
 const totalMacros = getTotalMacros();
 
 
-  return( 
+return( 
     <Box>
       <NavBar></NavBar>
         {
@@ -412,9 +470,22 @@ const totalMacros = getTotalMacros();
             </Center>
             {/* Date Navigation */}
             <Center mb={4}>
+              <HStack spacing={4}>
               <Button onClick={() => adjustDate(-1)}>{'<'}</Button>
-              <Box mx={4} fontWeight="bold">{formatDate(currentDate)}</Box>
-              <Button onClick={() => adjustDate(1)}>{'>'}</Button>
+                  <FormControl>
+                    <FormLabel FormLabel textAlign="center" w="full">
+                      {formatDate(currentDate)}
+                    </FormLabel>
+                    <Input
+                        onChange={handleDateChange}
+                        size='sm'
+                        type="date"
+                        value={currentDate}
+                        max={new Date().toLocaleDateString('en-CA')}
+                    />
+                  </FormControl>
+                <Button onClick={() => adjustDate(1)}>{'>'}</Button>
+              </HStack>
             </Center>
               {/* Calorie Goal Progress Bar */}
             <VStack spacing={4} mt={4}>
@@ -668,7 +739,7 @@ const totalMacros = getTotalMacros();
                 </Text>
                 {/* Nutritional Breakdown */}
                 <Box mt={4}>
-                  <Heading size="sm">Nutritional Breakdown (per serving):</Heading>
+                  <Heading size="sm">Nutritional Breakdown:</Heading>
                   <Text>Protein: {selectedItem.food.nutrients.PROCNT ? Math.ceil(selectedItem.food.nutrients.PROCNT * quantity) : "0"} g</Text>
                   <Text>Fat: {selectedItem.food.nutrients.FAT ? Math.ceil(selectedItem.food.nutrients.FAT * quantity) : "0"} g</Text>
                   <Text>Carbohydrates: {selectedItem.food.nutrients.CHOCDF ? Math.ceil(selectedItem.food.nutrients.CHOCDF * quantity) : "0"} g</Text>
