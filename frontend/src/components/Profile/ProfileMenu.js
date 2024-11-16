@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useEffect, useState } from 'react'
 import {
   Avatar,
@@ -105,7 +103,6 @@ export default function ProfileMenu() {
         bg="blue.500"
         color="white"
       />
-      {/* <Text fontSize="sm" fontWeight="medium">{`${user.firstName} ${user.lastName}`}</Text> */}
       <Menu>
         <MenuButton
           as={IconButton}

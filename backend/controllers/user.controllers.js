@@ -3,12 +3,9 @@ const resPattern = require('../helpers/resPattern');
 const httpStatus = require('http-status');
 const db = require('../index')
 const query = require('../query/query')
-const moment = require('moment');
-const bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-const multer = require('multer');
-const { generatePassword, generateOTP, sendEmail, validPassword } = require('../helpers/commonfile');
+const { generatePassword, validPassword } = require('../helpers/commonfile');
 
 
 const userColl = db.collection('Users');
