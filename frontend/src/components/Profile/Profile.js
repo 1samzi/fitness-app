@@ -24,7 +24,7 @@ import {
 import { jwtDecode } from 'jwt-decode'
 import NavBar from '../NavBar'
 
-function Profile() {
+export default function Profile() {
   const [user, setUser] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -154,7 +154,7 @@ function Profile() {
   if (isLoading) {
     return (
       <Container centerContent>
-        <Spinner size="xl" />
+        <Spinner size="xl" color="#163343" />
       </Container>
     )
   }
@@ -162,66 +162,89 @@ function Profile() {
   if (!user) {
     return (
       <Container centerContent>
-        <Text>User not found</Text>
+        <Text color="#163343">User not found</Text>
       </Container>
     )
   }
 
   return (
-    <Box bg="gray.50" minH="100vh">
+    <Box bg="#f0f4f8" minH="100vh">
       <NavBar />
       <Container maxW="container.md" py={10}>
-        <Card>
-          <CardHeader>
-            <Heading as="h1" size="xl" textAlign="center" color="blue.600">
+        <Card bg="white" shadow="md" borderRadius="lg">
+          <CardHeader bg="#163343" borderTopRadius="lg">
+            <Heading as="h1" size="xl" textAlign="center" color="white">
               User Profile
             </Heading>
           </CardHeader>
           <CardBody>
             <VStack spacing={6} align="stretch">
               <HStack justifyContent="center">
-                <Avatar size="2xl" name={`${user.firstName} ${user.lastName}`} />
+                <Avatar 
+                  size="2xl" 
+                  name={`${user.firstName} ${user.lastName}`}
+                  bg="#3eb599"
+                  color="white"
+                />
               </HStack>
               <SimpleGrid columns={[1, null, 2]} spacing={6}>
                 <FormControl>
-                  <FormLabel>First Name</FormLabel>
+                  <FormLabel color="#163343">First Name</FormLabel>
                   <Input
                     name="firstName"
                     value={isEditing ? editedUser.firstName : user.firstName}
                     onChange={handleChange}
                     isReadOnly={!isEditing}
+                    borderColor="#163343"
+                    _hover={{ borderColor: "#3eb599" }}
+                    _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Last Name</FormLabel>
+                  <FormLabel color="#163343">Last Name</FormLabel>
                   <Input
                     name="lastName"
                     value={isEditing ? editedUser.lastName : user.lastName}
                     onChange={handleChange}
                     isReadOnly={!isEditing}
+                    borderColor="#163343"
+                    _hover={{ borderColor: "#3eb599" }}
+                    _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Sex</FormLabel>
+                  <FormLabel color="#163343">Sex</FormLabel>
                   {isEditing ? (
-                    <Select name="sex" value={editedUser.sex} onChange={handleChange}>
+                    <Select 
+                      name="sex" 
+                      value={editedUser.sex} 
+                      onChange={handleChange}
+                      borderColor="#163343"
+                      _hover={{ borderColor: "#3eb599" }}
+                      _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
+                    >
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </Select>
                   ) : (
-                    <Input value={user.sex} isReadOnly />
+                    <Input 
+                      value={user.sex} 
+                      isReadOnly 
+                      borderColor="#163343"
+                    />
                   )}
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Date of Birth</FormLabel>
+                  <FormLabel color="#163343">Date of Birth</FormLabel>
                   <Input
                     value={user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not provided'}
                     isReadOnly
+                    borderColor="#163343"
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Height</FormLabel>
+                  <FormLabel color="#163343">Height</FormLabel>
                   <InputGroup>
                     <Input
                       name="height"
@@ -229,6 +252,9 @@ function Profile() {
                       onChange={handleChange}
                       type="number"
                       isReadOnly={!isEditing}
+                      borderColor="#163343"
+                      _hover={{ borderColor: "#3eb599" }}
+                      _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                     />
                     <InputRightElement width="4.5rem">
                       {isEditing ? (
@@ -236,18 +262,21 @@ function Profile() {
                           value={editedUser.heightUnit} 
                           onChange={(e) => handleUnitChange('height', e.target.value)} 
                           size="sm"
+                          borderColor="#163343"
+                          _hover={{ borderColor: "#3eb599" }}
+                          _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                         >
                           <option value="cm">cm</option>
                           <option value="in">in</option>
                         </Select>
                       ) : (
-                        <Box pr={2}>{user.heightUnit}</Box>
+                        <Box pr={2} color="#163343">{user.heightUnit}</Box>
                       )}
                     </InputRightElement>
                   </InputGroup>
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Weight</FormLabel>
+                  <FormLabel color="#163343">Weight</FormLabel>
                   <InputGroup>
                     <Input
                       name="weight"
@@ -255,6 +284,9 @@ function Profile() {
                       onChange={handleChange}
                       type="number"
                       isReadOnly={!isEditing}
+                      borderColor="#163343"
+                      _hover={{ borderColor: "#3eb599" }}
+                      _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                     />
                     <InputRightElement width="4.5rem">
                       {isEditing ? (
@@ -262,32 +294,60 @@ function Profile() {
                           value={editedUser.weightUnit} 
                           onChange={(e) => handleUnitChange('weight', e.target.value)} 
                           size="sm"
+                          borderColor="#163343"
+                          _hover={{ borderColor: "#3eb599" }}
+                          _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
                         >
                           <option value="kg">kg</option>
                           <option value="lbs">lbs</option>
                         </Select>
                       ) : (
-                        <Box pr={2}>{user.weightUnit}</Box>
+                        <Box pr={2} color="#163343">{user.weightUnit}</Box>
                       )}
                     </InputRightElement>
                   </InputGroup>
                 </FormControl>
               </SimpleGrid>
               <FormControl>
-                <FormLabel>Email</FormLabel>
-                <Input value={user.email} isReadOnly />
+                <FormLabel color="#163343">Email</FormLabel>
+                <Input 
+                  value={user.email} 
+                  isReadOnly 
+                  borderColor="#163343"
+                />
               </FormControl>
               <Box>
-                <Text fontWeight="bold">Member since: {new Date(user.createdAt).toLocaleDateString()}</Text>
+                <Text fontWeight="bold" color="#163343">Member since: {new Date(user.createdAt).toLocaleDateString()}</Text>
               </Box>
               <HStack justifyContent="center" spacing={4}>
                 {isEditing ? (
                   <>
-                    <Button colorScheme="blue" onClick={handleSubmit}>Save Changes</Button>
-                    <Button onClick={handleCancel}>Cancel</Button>
+                    <Button 
+                      onClick={handleSubmit}
+                      bg="#163343"
+                      color="white"
+                      _hover={{ bg: "#3eb599" }}
+                    >
+                      Save Changes
+                    </Button>
+                    <Button 
+                      onClick={handleCancel}
+                      bg="gray.200"
+                      color="#163343"
+                      _hover={{ bg: "gray.300" }}
+                    >
+                      Cancel
+                    </Button>
                   </>
                 ) : (
-                  <Button colorScheme="blue" onClick={handleEdit}>Edit Profile</Button>
+                  <Button 
+                    onClick={handleEdit}
+                    bg="#163343"
+                    color="white"
+                    _hover={{ bg: "#3eb599" }}
+                  >
+                    Edit Profile
+                  </Button>
                 )}
               </HStack>
             </VStack>
@@ -297,5 +357,3 @@ function Profile() {
     </Box>
   )
 }
-
-export default Profile

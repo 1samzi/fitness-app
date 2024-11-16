@@ -6,12 +6,13 @@ import {
   MenuList,
   MenuItem,
   MenuDivider,
-  IconButton,
+  Button,
   Flex,
   Text,
   useToast,
+  Box,
 } from '@chakra-ui/react'
-import { MoreVertical, User, LogOut } from 'lucide-react'
+import { ChevronDown, User, Settings, LogOut } from 'lucide-react'
 import { jwtDecode } from 'jwt-decode'
 import { useNavigate } from 'react-router-dom'
 
@@ -96,31 +97,45 @@ export default function ProfileMenu() {
   }
 
   return (
-    <Flex alignItems="center" gap={2}>
-      <Avatar 
-        name={`${user.firstName} ${user.lastName}`} 
-        size="sm"
-        bg="blue.500"
+    <Menu>
+      <MenuButton
+        as={Button}
+        rightIcon={<ChevronDown size={16} />}
+        bg="#3eb599"
         color="white"
-      />
-      <Menu>
-        <MenuButton
-          as={IconButton}
-          aria-label="Options"
-          icon={<MoreVertical size={20} />}
-          variant="ghost"
-          size="sm"
-        />
-        <MenuList>
-          <MenuItem icon={<User size={16} />} onClick={onProfileClick}>
-            Profile
-          </MenuItem>
-          <MenuDivider />
-          <MenuItem icon={<LogOut size={16} />} onClick={onSignOutClick}>
-            Sign out
-          </MenuItem>
-        </MenuList>
-      </Menu>
-    </Flex>
+        _hover={{ bg: '#35a086' }}
+        _active={{ bg: '#2e8b72' }}
+        size="sm"
+        fontWeight="medium"
+      >
+        <Flex alignItems="center" gap={2}>
+          <Avatar 
+            name={`${user.firstName} ${user.lastName}`} 
+            size="xs"
+            bg="#163343"
+            color="white"
+          />
+        </Flex>
+      </MenuButton>
+      <MenuList bg="white" borderColor="#e2e8f0" boxShadow="md">
+        <MenuItem 
+          icon={<User size={16} color="#163343" />} 
+          onClick={onProfileClick}
+          _hover={{ bg: '#3eb599' }}
+          _focus={{ bg: '#3eb599' }}
+        >
+          <Text color="#163343">Profile</Text>
+        </MenuItem>
+        <MenuDivider borderColor="#e2e8f0" />
+        <MenuItem 
+          icon={<LogOut size={16} color="#163343" />} 
+          onClick={onSignOutClick}
+          _hover={{ bg: '#3eb599' }}
+          _focus={{ bg: '#3eb599' }}
+        >
+          <Text color="#163343">Sign out</Text>
+        </MenuItem>
+      </MenuList>
+    </Menu>
   )
 }

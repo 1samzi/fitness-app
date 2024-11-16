@@ -24,4 +24,13 @@ router.route('/updateUserEmail/:Id')
 router.route('/deleteUserById/:Id')
     .delete(protect, userCtrl.deleteUserById);
 
+router.route('/get-macros/:Id')
+    .get(protect, userCtrl.getTodayMacros);
+
+router.route('/log-exercise/:Id')
+.post(protect, userCtrl.logExercise);
+
+router.route('/get-exercise-logs/:Id')
+.get(protect, userCtrl.getExerciseLogs);
+
 module.exports = router;

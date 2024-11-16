@@ -5,12 +5,13 @@ import NavBar from './NavBar'
 import Dashboard from './Dashboard'
 
 function Home({ onLogout }) {
-    const navigate = useNavigate()
+    // const navigate = useNavigate()
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        navigate('/login')
-    }
+    // const handleLogout = () => {
+    //     // onLogout()
+    //     localStorage.removeItem("token");
+    //     navigate('/login')
+    // }
 
     return (
         <Box width="100%">
@@ -18,9 +19,9 @@ function Home({ onLogout }) {
             <Container maxW="container.xl" centerContent>
                 <Box margin="auto" mt={8} p={4}>
                     <VStack spacing={4}>
-                        <Heading>Welcome to the Home Page</Heading>
+                        {/* <Heading>Welcome to the Home Page</Heading>
                         <Text>You are now logged in.</Text>
-                        <Button onClick={handleLogout} colorScheme="red">Logout</Button>
+                        <Button onClick={handleLogout} colorScheme="red">Logout</Button> */}
                     </VStack>
                 </Box>
                 <Dashboard />

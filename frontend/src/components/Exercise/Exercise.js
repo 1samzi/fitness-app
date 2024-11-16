@@ -1,18 +1,32 @@
 import React, { useState } from 'react';
-import { Box, FormControl, FormLabel, Input, Select, Button, Text, HStack, VStack } from '@chakra-ui/react';
+import { Box, 
+        FormControl, 
+        FormLabel, 
+        Input, 
+        Select, 
+        Button, 
+        Text, 
+        HStack, 
+        VStack } from '@chakra-ui/react';
 import NavBar from '../NavBar';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { jwtDecode } from 'jwt-decode';
 
 function Exercise() { 
   const [formData, setFormData] = useState({ 
     exercise: '',
     duration: '',
-    intensity: ''
+    intensity: '',
+    weight:'',
+    unit: 'lbs' //Default is pounds
   });
   const [selectedDate, setSelectedDate] = useState(new Date());  
   const [message, setMessage] = useState('');
-  
+
+  const token = localStorage.getItem('token');
+  const userId = jwtDecode(token)._id;
+
   const handleChange = (event) => {              
     const { name, value } = event.target;
     setFormData((prevData) => ({
@@ -21,8 +35,7 @@ function Exercise() {
     }));
   };
 
-  const submit = (event) => {
-    event.preventDefault();
+  const calculateCalories = () => {
 
     const { exercise, duration, intensity } = formData;
     let calories = 0;
@@ -46,7 +59,6 @@ function Exercise() {
               break;
           }
           break;
-
         case 'Strength':
           switch (intensity) {
             case 'High':
@@ -62,7 +74,6 @@ function Exercise() {
               break;
           }
           break;
-
         case 'Stretching':
           switch (intensity) {
             case 'High':
@@ -78,16 +89,41 @@ function Exercise() {
               break;
           }
           break;
-
         default:
           break;
       }
-
-    
-     
     }
-     const todaysDate = selectedDate.toLocaleDateString();
-      setMessage(`On ${todaysDate}, You Burned: ${calories} Calories!`);
+    return calories;
+  };
+
+  // Send exercise log to backend
+  const submitExerciseLog = async (event) => {
+    event.preventDefault();
+
+    const calories = calculateCalories();
+    const date = selectedDate.toISOString().split('T')[0];
+    const exerciseData = { ...formData, calories, date };
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/user/log-exercise/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(exerciseData),
+      });
+
+      if (response.ok) {
+        setMessage(`On ${date}, You Burned: ${calories} Calories!`);
+      } else {
+        throw new Error('Failed to log exercise');
+      }
+    } catch (error) {
+      console.error('Error logging exercise:', error);
+      setMessage('Failed to log exercise.');
+    }
+
     setTimeout(() => setMessage(''), 5000);
   };
 
@@ -98,7 +134,7 @@ function Exercise() {
       {message && <Text color="green" mb={4}>{message}</Text>}
 
       <HStack spacing={8} align="start">
-        <VStack as="form" onSubmit={submit} spacing={4} width="50%">
+        <VStack as="form" onSubmit={submitExerciseLog} spacing={4} width="50%">
           <FormControl mb={3}>
             <FormLabel>Exercise Type</FormLabel>
             <Select
@@ -118,7 +154,9 @@ function Exercise() {
               type="number"
               placeholder="Enter duration"
               value={formData.duration}
-              onChange={handleChange}/>
+              onChange={handleChange}
+              required 
+              min="0" />
           </FormControl>
           <FormControl mb={3}>
             <FormLabel>Intensity</FormLabel>
@@ -132,10 +170,30 @@ function Exercise() {
               <option value="High">High</option>
             </Select>
           </FormControl>
+         <FormControl mb={3}>
+            <FormLabel>Weight</FormLabel>
+            <HStack>
+            <Input
+              name="weight"
+              type="number"
+              placeholder="Enter Weight"
+              value={formData.weight}
+              onChange={handleChange}
+              required
+              min="0" 
+            />
+            <Select 
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}>
+              <option value="lbs">lbs</option>
+              <option value ="kg">kg</option>
+             </Select>
+             </HStack>
+          </FormControl>
           <Button colorScheme="blue" type="submit" mt={4}>Submit</Button>
         </VStack>
-        
-    
+
         <Box>
           <Text fontSize="20px" mb={2}>Select Date</Text>
           <DatePicker 
@@ -150,3 +208,4 @@ function Exercise() {
 }
 
 export default Exercise;
+
