@@ -1,12 +1,6 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const nodeMailer = require('nodemailer');
-const multer = require('multer');
-const multerS3 = require('multer-s3');
-const path = require('path');
 const dotenv = require('dotenv');
-const { v4: uuidv4 } = require('uuid');
-const s3 = require('../config/awsS3');
 
 dotenv.config();
 
@@ -22,14 +16,6 @@ const safeModel = () => {
 const generatePassword = (password) => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), process.env.PASS_SECRET);
 };
-
-// const generateToken = () => {
-//     return jwt.sign({
-//         _id: this._id,
-//         username: this.username,
-//         type: this.type
-//     }, process.env.JWT_SECRET)
-// }
 
 // generate Random Password
 
@@ -87,22 +73,6 @@ let sendEmail = async (toEmail, subject, bodyHtml, attachments) => {
     });
 };
 
-
-// upload s3
-// const uploadS3 = multer({
-//     storage: multerS3({
-//         s3: s3,
-//         bucket: process.env.AWS_BUCKET_NAME,
-//         acl: 'public-read',
-//         key: function (req, file, cb) {
-//             const extname = path.extname(file.originalname);
-//             const key = path.basename(file.originalname, extname) + '-' + uuidv4() + extname;
-//             cb(null, key);
-//         },
-//         limits: { fileSize: 5000000000 }, // In bytes: 5000000000 bytes = 5 GB
-//     })
-// });
-
 const emailTemplate = (generatedPass, email) => {
 
     const emailBody = `
@@ -137,9 +107,7 @@ module.exports = {
     safeModel,
     generateRandomPassword,
     generatePassword,
-    // generateToken,
     generateOTP,
     sendEmail,
-    emailTemplate,
-    // uploadS3
+    emailTemplate
 }

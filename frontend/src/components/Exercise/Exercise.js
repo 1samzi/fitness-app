@@ -7,11 +7,11 @@ import { Box,
         Button, 
         Text, 
         HStack, 
-        VStack 
-       } from '@chakra-ui/react';
+        VStack } from '@chakra-ui/react';
 import NavBar from '../NavBar';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { jwtDecode } from 'jwt-decode';
 
 function Exercise() { 
   const [formData, setFormData] = useState({ 
@@ -23,7 +23,10 @@ function Exercise() {
   });
   const [selectedDate, setSelectedDate] = useState(new Date());  
   const [message, setMessage] = useState('');
-  
+
+  const token = localStorage.getItem('token');
+  const userId = jwtDecode(token)._id;
+
   const handleChange = (event) => {              
     const { name, value } = event.target;
     setFormData((prevData) => ({
@@ -35,75 +38,94 @@ function Exercise() {
   const submit = (event) => {
     event.preventDefault();
 
-    const { exercise, duration, intensity, weight, unit } = formData;
+    const { exercise, duration, intensity } = formData;
     let calories = 0;
+    const durationTime = parseFloat(duration);
 
-    if (exercise && duration && intensity && weight) {    
+    if (exercise && duration && intensity) {    
       const durationTime = parseFloat(duration);
-      let weightPounds = parseFloat(weight);
-    
-        if (unit === 'kg') {
-            weightPounds = weightPounds * 2.20462;
-        }
 
       switch (exercise) {
         case 'Cardio':
           switch (intensity) {
             case 'High':
-              calories = durationTime * (weightPounds/320) * 15;
+              calories = durationTime * 15;
               break;
             case 'Moderate':
-              calories = durationTime * (weightPounds/320) *  10;
+              calories = durationTime * 10;
               break;
             case 'Low':
-              calories = durationTime * (weightPounds/320) * 5;
+              calories = durationTime * 5;
               break;
             default:
               break;
           }
           break;
-
         case 'Strength':
           switch (intensity) {
             case 'High':
-              calories = durationTime * (weightPounds/320) * 12;
+              calories = durationTime * 12;
               break;
             case 'Moderate':
-              calories = durationTime * (weightPounds/320) * 8;
+              calories = durationTime * 8;
               break;
             case 'Low':
-              calories = durationTime * (weightPounds/320) * 4;
+              calories = durationTime * 4;
               break;
             default:
               break;
           }
           break;
-
         case 'Stretching':
           switch (intensity) {
             case 'High':
-              calories = durationTime * (weightPounds/320) * 6;
+              calories = durationTime * 6;
               break;
             case 'Moderate':
-              calories = durationTime * (weightPounds/320) * 4;
+              calories = durationTime * 4;
               break;
             case 'Low':
-              calories = durationTime * (weightPounds/320) * 2;
+              calories = durationTime * 2;
               break;
             default:
               break;
           }
           break;
-
         default:
           break;
       }
-
-    
-     
     }
-     const todaysDate = selectedDate.toLocaleDateString();
-      setMessage(`On ${todaysDate}, You Burned: ${calories} Calories!`);
+    return calories;
+  };
+
+  // Send exercise log to backend
+  const submitExerciseLog = async (event) => {
+    event.preventDefault();
+
+    const calories = calculateCalories();
+    const date = selectedDate.toISOString().split('T')[0];
+    const exerciseData = { ...formData, calories, date };
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/user/log-exercise/${userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(exerciseData),
+      });
+
+      if (response.ok) {
+        setMessage(`On ${date}, You Burned: ${calories} Calories!`);
+      } else {
+        throw new Error('Failed to log exercise');
+      }
+    } catch (error) {
+      console.error('Error logging exercise:', error);
+      setMessage('Failed to log exercise.');
+    }
+
     setTimeout(() => setMessage(''), 5000);
   };
 
@@ -114,7 +136,7 @@ function Exercise() {
       {message && <Text color="green" mb={4}>{message}</Text>}
 
       <HStack spacing={8} align="start">
-        <VStack as="form" onSubmit={submit} spacing={4} width="50%">
+        <VStack as="form" onSubmit={submitExerciseLog} spacing={4} width="50%">
           <FormControl mb={3}>
             <FormLabel>Exercise Type</FormLabel>
             <Select
@@ -173,8 +195,7 @@ function Exercise() {
           </FormControl>
           <Button colorScheme="blue" type="submit" mt={4}>Submit</Button>
         </VStack>
-        
-    
+
         <Box>
           <Text fontSize="20px" mb={2}>Select Date</Text>
           <DatePicker 
