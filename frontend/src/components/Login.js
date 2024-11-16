@@ -14,7 +14,8 @@ import {
     VStack,
     Text,
     useToast,
-    HStack,
+    Image,
+    Flex,
 } from '@chakra-ui/react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -95,7 +96,6 @@ function Login() {
                         isClosable: true,
                     })
                     if (data.data.userData.userType === "admin") {
-                        // Generate OTP for admin users
                         const otpResponse = await fetch('http://localhost:3001/api/auth/generate-otp', {
                             method: 'POST',
                             headers: {
@@ -144,67 +144,90 @@ function Login() {
     }
 
     return (
-        <Container maxW="md" centerContent>
-            <Box w="100%" p={8} mt={10} borderWidth={1} borderRadius={8} boxShadow="lg">
-                <Center>
-                    <Heading mb={6}>Login</Heading>
-                </Center>
-                <form onSubmit={handleSubmit}>
-                    <VStack spacing={4} align="flex-start">
-                        <FormControl isInvalid={!!emailError}>
-                            <FormLabel htmlFor="email">Email</FormLabel>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="Enter your email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                            <FormErrorMessage>{emailError}</FormErrorMessage>
-                        </FormControl>
-                        <FormControl isInvalid={!!passwordError}>
-                            <FormLabel htmlFor="password">Password</FormLabel>
-                            <InputGroup>
-                                <Input
-                                    id="password"
-                                    type={show ? 'text' : 'password'}
-                                    placeholder="Enter your password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                />
-                                <InputRightElement width="4.5rem">
-                                    <Button h="1.75rem" size="sm" onClick={handleClick}>
-                                        {show ? 'Hide' : 'Show'}
-                                    </Button>
-                                </InputRightElement>
-                            </InputGroup>
-                            <FormErrorMessage>{passwordError}</FormErrorMessage>
-                        </FormControl>
-                        <Button type="submit" colorScheme="blue" width="full" mt={4}>
-                            Login
-                        </Button>
+        <Flex
+            minHeight="100vh"
+            width="full"
+            align="center"
+            justifyContent="center"
+            bgGradient="linear(to-br, #163343, #3eb599)"
+        >
+            <Container maxW="md" centerContent>
+                <Box
+                    bg="white"
+                    p={8}
+                    borderRadius="lg"
+                    boxShadow="xl"
+                    width="full"
+                >
+                    <VStack spacing={8} align="center">
+                        <Image
+                            src="/logo_main.png"
+                            alt="Logo"
+                            boxSize="150px"
+                            objectFit="contain"
+                        />
+                        <Heading color="#163343">Login</Heading>
+                        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+                            <VStack spacing={4} align="flex-start">
+                                <FormControl isInvalid={!!emailError}>
+                                    <FormLabel htmlFor="email" color="#163343">Email</FormLabel>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        borderColor="#163343"
+                                        _hover={{ borderColor: "#3eb599" }}
+                                        _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
+                                    />
+                                    <FormErrorMessage>{emailError}</FormErrorMessage>
+                                </FormControl>
+                                <FormControl isInvalid={!!passwordError}>
+                                    <FormLabel htmlFor="password" color="#163343">Password</FormLabel>
+                                    <InputGroup>
+                                        <Input
+                                            id="password"
+                                            type={show ? 'text' : 'password'}
+                                            placeholder="Enter your password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            borderColor="#163343"
+                                            _hover={{ borderColor: "#3eb599" }}
+                                            _focus={{ borderColor: "#3eb599", boxShadow: "0 0 0 1px #3eb599" }}
+                                        />
+                                        <InputRightElement width="4.5rem">
+                                            <Button h="1.75rem" size="sm" onClick={handleClick} bg="#163343" color="white" _hover={{ bg: "#3eb599" }}>
+                                                {show ? 'Hide' : 'Show'}
+                                            </Button>
+                                        </InputRightElement>
+                                    </InputGroup>
+                                    <FormErrorMessage>{passwordError}</FormErrorMessage>
+                                </FormControl>
+                                <Button type="submit" bg="#163343" color="white" width="full" mt={4} _hover={{ bg: "#3eb599" }}>
+                                    Login
+                                </Button>
+                            </VStack>
+                        </form>
+                        <Flex direction="column" align="center" width="full">
+                            <Text color="#163343">
+                                Don't have an account?{' '}
+                                <Link to="/register">
+                                    <Text as="span" color="#3eb599" fontWeight="bold">
+                                        Register here
+                                    </Text>
+                                </Link>
+                            </Text>
+                            <Link to="/forgot-password">
+                                <Text color="#3eb599" fontWeight="bold" mt={2}>
+                                    Forgot Password?
+                                </Text>
+                            </Link>
+                        </Flex>
                     </VStack>
-                </form>
-                <HStack>
-                    <Text mt={4} textAlign="center">
-                        Don't have an account?{' '}
-                    </Text>
-                    <Link to="/register">
-                        <Text mt={4} color='blue.500'>
-                            Register here
-                        </Text>
-                    </Link>
-                </HStack>
-
-                <HStack style={{justifyContent:'center'}}>
-                    <Link to="/forgot-password" >
-                        <Text mt={3} color='blue.500'>
-                            Forgot Password?
-                        </Text>
-                    </Link>
-                </HStack>
-            </Box>
-        </Container>
+                </Box>
+            </Container>
+        </Flex>
     )
 }
 
