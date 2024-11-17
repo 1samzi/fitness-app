@@ -317,12 +317,14 @@ const getTodayMacros = async (req, res, next) => {
 const logExercise = async (req, res, next) => {
     try {
         const userId = req.params.Id;
-        const { exercise, duration, intensity, calories, date } = req.body;
-
+        const { exercise, duration, intensity, weight, unit, calories, date } = req.body;
+        
         const exerciseEntry = {
             activity: exercise,
             minutes: duration,  
             intensity: intensity,
+            weight: weight, 
+            unit: unit, 
             calories: calories,
             date: date
         };
@@ -359,8 +361,12 @@ const getExerciseLogs = async (req, res, next) => {
         const exerciseLogsForDate = user.exerciseLogs?.filter(log => log.date === date).map(log => ({
             activity: log.activity,
             minutes: log.minutes,
-            calories: log.calories
+            calories: log.calories,
+            weight: log.weight,
+            unit: log.unit, 
         })) || [];
+
+        console.log(exerciseLogsForDate);
 
         res.status(200).json({ data: exerciseLogsForDate });
     } catch (error) {

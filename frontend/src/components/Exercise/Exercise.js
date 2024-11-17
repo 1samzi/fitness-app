@@ -18,7 +18,7 @@ function Exercise() {
     exercise: '',
     duration: '',
     intensity: '',
-    weight:'',
+    weight: '',
     unit: 'lbs' //Default is pounds
   });
   const [selectedDate, setSelectedDate] = useState(new Date());  
