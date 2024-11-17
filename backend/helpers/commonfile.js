@@ -7,7 +7,7 @@ dotenv.config();
 // bcrypt password
 const validPassword = (dbPassword, passwordToMatch) => {
     return bcrypt.compareSync(passwordToMatch, dbPassword);
-};
+};// validate password
 
 const safeModel = () => {
     return _.omit(this.toObject(), ['password', '__v']);
@@ -15,7 +15,7 @@ const safeModel = () => {
 
 const generatePassword = (password) => {
     return bcrypt.hashSync(password, bcrypt.genSaltSync(8), process.env.PASS_SECRET);
-};
+}; //generate encrypted password
 
 // generate Random Password
 
@@ -27,7 +27,7 @@ function generateRandomPassword() {
         retVal += charset.charAt(Math.floor(Math.random() * n));
     }
     return retVal;
-}
+}// generate a unique pw.
 
 // generateOTP
 function generateOTP() {
