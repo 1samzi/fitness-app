@@ -12,11 +12,11 @@ const mealsColl = db.collection('Meals');
 // Add a new meal for a specific user
 const addMeal = async (req, res, next) => {
     try {
-        const userId = req.params.userId;  // User ID is passed in request parameters
+        const userId = req.params.userId; // User ID is passed in request parameters
         const mealData = req.body;
 
         mealData.userId = ObjectId(userId); // Add userId to meal data
-        mealData.date = req.query.date;  // Assign querie'd date to meal
+        mealData.date = req.query.date; // Assign querie'd date to meal
 
         const insertResponse = await mealsColl.insertOne(mealData);
         let obj = resPattern.successPattern(httpStatus.OK, insertResponse.ops[0], 'Meal added successfully');
@@ -73,8 +73,22 @@ const updateMeal = async (req, res, next) => {
     }
 };
 
+const getAllMealByUser = async (req, res, next) => {
+    try {
+        const userId = req.params.userId;
+
+        const meals = await mealsColl.find({ userId: ObjectId(userId) }).toArray();
+
+        let obj = resPattern.successPattern(httpStatus.OK, meals, 'Meals fetched successfully');
+        return res.status(obj.code).json(obj);
+    } catch (e) {
+        return next(new APIError(`${e.message}`, httpStatus.BAD_REQUEST, true));
+    }
+}
+
 module.exports = {
     addMeal,
     getMealsByDate,
-    updateMeal
+    updateMeal,
+    getAllMealByUser
 };
