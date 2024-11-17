@@ -289,7 +289,7 @@ const NutritionForm = () => {
 
   // Fetch meals for a given date when the date changes
   useEffect(() => {
-    console.log(meals)
+    // console.log(meals)
     const fetchMealsData = async () => {
       const fetchedMeals = await fetchMeals(); 
       if (fetchedMeals && fetchedMeals.length > 0) {
@@ -457,7 +457,6 @@ async function fetchMeals() {
 
 const totalMacros = getTotalMacros();
 
-
 return( 
     <Box>
       <NavBar></NavBar>
@@ -481,7 +480,8 @@ return(
                         size='sm'
                         type="date"
                         value={currentDate}
-                        max={new Date().toLocaleDateString('en-CA')}
+                        // max={new Date().toLocaleDateString('en-CA')}
+                        min={new Date(user.createdAt).toISOString().split('T')[0]}
                     />
                   </FormControl>
                 <Button onClick={() => adjustDate(1)}>{'>'}</Button>

@@ -3,6 +3,8 @@ const httpStatus = require('http-status');
 /**
  * @extends Error
  */
+
+//FACTORY DESIGN
 class ExtendableError extends Error {
 	constructor(message, status, isPublic) {
 		super(message);
@@ -10,9 +12,9 @@ class ExtendableError extends Error {
 		this.message = message;
 		this.status = status;
 		this.isPublic = isPublic;
-		Error.captureStackTrace(this, this.constructor);
+		Error.captureStackTrace(this, this.constructor); 
 	}
-}
+}  // API Error handling 
 
 /**
  * Class representing an API error.
@@ -27,7 +29,7 @@ class APIError extends ExtendableError {
 	 */
 	constructor(message, status = httpStatus.INTERNAL_SERVER_ERROR, isPublic = false) {
 		super(message, status, isPublic);
-	}
+	} // API error Handling 
 }
 
 

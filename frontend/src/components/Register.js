@@ -22,7 +22,7 @@ import {
 } from '@chakra-ui/react'
 import { useNavigate } from 'react-router-dom'
 
-// Extend the theme to include custom colors
+// Theme for the background 
 const theme = extendTheme({
     colors: {
         primary: {
