@@ -156,9 +156,16 @@ export default function RegistrationForm() {
 
         if (Object.keys(newErrors).length === 0) {
             try {
-                console.log(finalData)
-                await new Promise((resolve) => setTimeout(resolve, 1000))
-
+                const response = await fetch('http://localhost:3001/api/user/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(finalData),
+                })
+                if (!response.ok) {
+                    throw new Error('Failed to register user')
+                }
                 toast({
                     title: 'Registration successful',
                     description: 'Your account has been created.',
@@ -166,7 +173,7 @@ export default function RegistrationForm() {
                     duration: 5000,
                     isClosable: true,
                 })
-
+                await new Promise((resolve) => setTimeout(resolve, 1000))
                 navigate('/login')
             } catch (error) {
                 console.error('Registration error:', error)
