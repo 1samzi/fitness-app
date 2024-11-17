@@ -11,7 +11,6 @@ import {
     Heading,
     Input,
     InputGroup,
-    InputRightElement,
     Select,
     SimpleGrid,
     Text,
@@ -35,7 +34,6 @@ const theme = extendTheme({
     },
 })
 
-
 export default function RegistrationForm() {
     const [show, setShow] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
@@ -46,6 +44,8 @@ export default function RegistrationForm() {
         sex: '',
         dateOfBirth: '',
         height: '',
+        heightFeet: '',
+        heightInches: '',
         heightUnit: 'cm',
         weight: '',
         weightUnit: 'kg',
@@ -89,19 +89,10 @@ export default function RegistrationForm() {
     const handleChange = (e) => {
         const { name, value } = e.target
 
-        if (name === 'height' || name === 'weight') {
-            const numValue = parseFloat(value)
-            const sanitizedValue = isNaN(numValue) ? '' : Math.max(0, numValue).toString()
-            setFormData((prevData) => ({
-                ...prevData,
-                [name]: sanitizedValue,
-            }))
-        } else {
-            setFormData((prevData) => ({
-                ...prevData,
-                [name]: value,
-            }))
-        }
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }))
 
         const error = validateField(name, value)
         setErrors((prevErrors) => ({
@@ -132,31 +123,13 @@ export default function RegistrationForm() {
     }, [formData.dateOfBirth])
 
     const handleUnitChange = (field, newUnit) => {
-        setFormData((prevData) => {
-            const oldUnit = prevData[`${field}Unit`]
-            const oldValue = prevData[field]
-            let newValue = oldValue
-
-            if (oldValue) {
-                if (field === 'height') {
-                    newValue =
-                        newUnit === 'cm'
-                            ? (parseFloat(oldValue) * 2.54).toFixed(2)
-                            : (parseFloat(oldValue) / 2.54).toFixed(2)
-                } else if (field === 'weight') {
-                    newValue =
-                        newUnit === 'kg'
-                            ? (parseFloat(oldValue) / 2.2046).toFixed(2)
-                            : (parseFloat(oldValue) * 2.2046).toFixed(2)
-                }
-            }
-
-            return {
-                ...prevData,
-                [`${field}Unit`]: newUnit,
-                [field]: newValue,
-            }
-        })
+        setFormData((prevData) => ({
+            ...prevData,
+            [`${field}Unit`]: newUnit,
+            ...(field === 'height' && newUnit === 'cm'
+                ? { heightFeet: '', heightInches: '' }
+                : { height: '' }),
+        }))
     }
 
     const handleSubmit = async (e) => {
@@ -169,9 +142,21 @@ export default function RegistrationForm() {
             }
         })
 
+        let finalHeight = formData.height
+        if (formData.heightUnit === 'ft') {
+            const feet = parseFloat(formData.heightFeet) || 0
+            const inches = parseFloat(formData.heightInches) || 0
+            finalHeight = (feet * 30.48 + inches * 2.54).toFixed(2)
+        }
+
+        const finalData = {
+            ...formData,
+            height: finalHeight,
+        }
+
         if (Object.keys(newErrors).length === 0) {
             try {
-                // Simulating API call
+                console.log(finalData)
                 await new Promise((resolve) => setTimeout(resolve, 1000))
 
                 toast({
@@ -294,57 +279,73 @@ export default function RegistrationForm() {
                                 <SimpleGrid columns={[1, null, 2]} spacing={6}>
                                     <FormControl>
                                         <FormLabel htmlFor="height">Height</FormLabel>
-                                        <InputGroup>
+                                        {formData.heightUnit === 'cm' ? (
                                             <Input
                                                 id="height"
                                                 name="height"
-                                                placeholder="Enter height"
+                                                placeholder="Enter height in cm"
                                                 value={formData.height}
                                                 onChange={handleChange}
                                                 type="number"
                                                 min="0"
-                                                step="0.01"
                                                 focusBorderColor="secondary.500"
                                             />
-                                            <InputRightElement width="4.5rem">
-                                                <Select
-                                                    value={formData.heightUnit}
-                                                    onChange={(e) => handleUnitChange('height', e.target.value)}
-                                                    size="sm"
+                                        ) : (
+                                            <SimpleGrid columns={2} spacing={4}>
+                                                <Input
+                                                    id="heightFeet"
+                                                    name="heightFeet"
+                                                    placeholder="Feet"
+                                                    value={formData.heightFeet}
+                                                    onChange={handleChange}
+                                                    type="number"
+                                                    min="0"
                                                     focusBorderColor="secondary.500"
-                                                >
-                                                    <option value="cm">cm</option>
-                                                    <option value="in">in</option>
-                                                </Select>
-                                            </InputRightElement>
-                                        </InputGroup>
+                                                />
+                                                <Input
+                                                    id="heightInches"
+                                                    name="heightInches"
+                                                    placeholder="Inches"
+                                                    value={formData.heightInches}
+                                                    onChange={handleChange}
+                                                    type="number"
+                                                    min="0"
+                                                    max="11"
+                                                    focusBorderColor="secondary.500"
+                                                />
+                                            </SimpleGrid>
+                                        )}
+                                        <Select
+                                            mt={2}
+                                            value={formData.heightUnit}
+                                            onChange={(e) => handleUnitChange('height', e.target.value)}
+                                            focusBorderColor="secondary.500"
+                                        >
+                                            <option value="cm">Centimeters</option>
+                                            <option value="ft">Feet/Inches</option>
+                                        </Select>
                                     </FormControl>
                                     <FormControl>
                                         <FormLabel htmlFor="weight">Weight</FormLabel>
-                                        <InputGroup>
-                                            <Input
-                                                id="weight"
-                                                name="weight"
-                                                placeholder="Enter weight"
-                                                value={formData.weight}
-                                                onChange={handleChange}
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                focusBorderColor="secondary.500"
-                                            />
-                                            <InputRightElement width="4.5rem">
-                                                <Select
-                                                    value={formData.weightUnit}
-                                                    onChange={(e) => handleUnitChange('weight', e.target.value)}
-                                                    size="sm"
-                                                    focusBorderColor="secondary.500"
-                                                >
-                                                    <option value="kg">kg</option>
-                                                    <option value="lbs">lbs</option>
-                                                </Select>
-                                            </InputRightElement>
-                                        </InputGroup>
+                                        <Input
+                                            id="weight"
+                                            name="weight"
+                                            placeholder="Enter weight"
+                                            value={formData.weight}
+                                            onChange={handleChange}
+                                            type="number"
+                                            min="0"
+                                            focusBorderColor="secondary.500"
+                                        />
+                                        <Select
+                                            mt={2}
+                                            value={formData.weightUnit}
+                                            onChange={(e) => handleUnitChange('weight', e.target.value)}
+                                            focusBorderColor="secondary.500"
+                                        >
+                                            <option value="kg">Kilograms</option>
+                                            <option value="lbs">Pounds</option>
+                                        </Select>
                                     </FormControl>
                                 </SimpleGrid>
                                 <FormControl isRequired isInvalid={!!errors.goal}>
@@ -388,11 +389,16 @@ export default function RegistrationForm() {
                                             onChange={handleChange}
                                             focusBorderColor="secondary.500"
                                         />
-                                        <InputRightElement width="4.5rem">
-                                            <Button h="1.75rem" size="sm" onClick={handleClick} bg="primary.500" color="white" _hover={{ bg: "secondary.500" }}>
-                                                {show ? 'Hide' : 'Show'}
-                                            </Button>
-                                        </InputRightElement>
+                                        <Button
+                                            h="1.75rem"
+                                            size="sm"
+                                            onClick={handleClick}
+                                            bg="primary.500"
+                                            color="white"
+                                            _hover={{ bg: 'secondary.500' }}
+                                        >
+                                            {show ? 'Hide' : 'Show'}
+                                        </Button>
                                     </InputGroup>
                                     <FormErrorMessage>{errors.password}</FormErrorMessage>
                                 </FormControl>
@@ -407,15 +413,26 @@ export default function RegistrationForm() {
                                             onChange={handleChange}
                                             focusBorderColor="secondary.500"
                                         />
-                                        <InputRightElement width="4.5rem">
-                                            <Button h="1.75rem" size="sm" onClick={handleClickConfirm} bg="primary.500" color="white" _hover={{ bg: "secondary.500" }}>
-                                                {showConfirm ? 'Hide' : 'Show'}
-                                            </Button>
-                                        </InputRightElement>
+                                        <Button
+                                            h="1.75rem"
+                                            size="sm"
+                                            onClick={handleClickConfirm}
+                                            bg="primary.500"
+                                            color="white"
+                                            _hover={{ bg: 'secondary.500' }}
+                                        >
+                                            {showConfirm ? 'Hide' : 'Show'}
+                                        </Button>
                                     </InputGroup>
                                     <FormErrorMessage>{errors.confirmPassword}</FormErrorMessage>
                                 </FormControl>
-                                <Button type="submit" bg="primary.500" color="white" size="lg" _hover={{ bg: "secondary.500" }}>
+                                <Button
+                                    type="submit"
+                                    bg="primary.500"
+                                    color="white"
+                                    size="lg"
+                                    _hover={{ bg: 'secondary.500' }}
+                                >
                                     Register
                                 </Button>
                                 <Text textAlign="center">
@@ -437,4 +454,3 @@ export default function RegistrationForm() {
         </Flex>
     )
 }
-

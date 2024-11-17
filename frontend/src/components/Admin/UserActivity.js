@@ -32,22 +32,22 @@ import { MdStraighten } from 'react-icons/md'
 import { useParams } from 'react-router-dom'
 import NavBar from '../NavBar'
 
+//function for managing and displaying user activity
 function UserActivity() {
-  const [userData, setUserData] = useState(null)
-  const [newEmail, setNewEmail] = useState('')
-  const [resetEmail, setResetEmail] = useState('')
+  const [userData, setUserData] = useState(null) //state variable for user data 
+  const [newEmail, setNewEmail] = useState('')  //state variable for email update 
+  const [resetEmail, setResetEmail] = useState('')  
   const userId = useParams();
   const toast = useToast()
   const token = localStorage.getItem('token')
-
+//fetch user data 
   console.log(userId);
   useEffect(() => {
     fetchUserData()
   }, [])
-
+//fetch data from API 
   const fetchUserData = async () => {
     try {
-      // Replace 'user_id' with the actual user ID or fetch it from context/props
       const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId.id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -68,10 +68,9 @@ function UserActivity() {
       })
     }
   }
-
+//function for email update 
   const handleEmailUpdate = async () => {
     try {
-      // Replace 'user_id' with the actual user ID
       const response = await fetch(`http://localhost:3001/api/user/updateUserEmail/${userId.id}`, {
         method: 'POST',
         headers: {
@@ -102,7 +101,7 @@ function UserActivity() {
       })
     }
   }
-
+//function for password reset request
   const handlePasswordReset = async () => {
     try {
       const response = await fetch('http://localhost:3001/api/auth/admin-reset-password', {
@@ -134,17 +133,20 @@ function UserActivity() {
       })
     }
   }
+  
+  //display loading message 
 
   if (!userData) {
     return <Text>Loading...</Text>
   }
 
+  //render user's activity page
   return (
     <Box bg="gray.50" minH="100vh">
       <NavBar />
       <Container maxW="container.lg" py={8}>
         <Stack spacing={8}>
-          {/* User Overview Card */}
+         
           <Card>
             <CardHeader bg="blue.500" color="white" borderTopRadius="md">
               <HStack>
@@ -209,8 +211,7 @@ function UserActivity() {
             </CardBody>
           </Card>
 
-          {/* Admin Controls */}
-          {/* {userData.userType === 'admin' && ( */}
+         
             <Card>
               <CardHeader bg="purple.500" color="white" borderTopRadius="md">
                 <HStack>
@@ -220,7 +221,7 @@ function UserActivity() {
               </CardHeader>
               <CardBody>
                 <FormControl>
-                  <FormLabel>Update User Email</FormLabel>
+                  <FormLabel>Update User Email</FormLabel> {/* form for updating user email*/}
                   <HStack>
                     <Input
                       type="email"
@@ -235,9 +236,8 @@ function UserActivity() {
                 </FormControl>
               </CardBody>
             </Card>
-          {/* )} */}
-
-          {/* Password Reset Card */}
+         
+         {/* password reset card*/}
           <Card>
             <CardHeader bg="teal.500" color="white" borderTopRadius="md">
               <HStack>
@@ -246,7 +246,7 @@ function UserActivity() {
               </HStack>
             </CardHeader>
             <CardBody>
-              <FormControl>
+              <FormControl> {/* form to initiate password reset*/}
                 <FormLabel>Reset Password</FormLabel>
                 <Text fontSize="sm" color="gray.600" mb={4}>
                   Enter your email address to receive password reset instructions

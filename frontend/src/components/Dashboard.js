@@ -10,27 +10,22 @@ import {
     Container,
     VStack,
     Text,
+    Select,
 } from '@chakra-ui/react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { AgCharts } from 'ag-charts-react';
 import { jwtDecode } from 'jwt-decode';
-
 
 function Dashboard() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [unit, setUnit] = useState({ height: 'cm', weight: 'kg' });
     const [exerciseLogs, setExerciseLogs] = useState([]);
     const [macroNutrients, setMacroNutrients] = useState([]);
-
-    const token = localStorage.getItem('token');
-    const decodedToken = jwtDecode(token);
-    const userId = decodedToken._id;
-    const today = new Date().toISOString().split('T')[0];
-
     const [chartOptions, setChartOptions] = useState({
         data: [],
         title: {
-            text: "Macronutrient Distribution",
+            text: "Daily Macronutrient Distribution",
         },
         series: [
             {
@@ -38,21 +33,91 @@ function Dashboard() {
                 angleKey: "value",
                 calloutLabelKey: "name",
                 sectorLabelKey: "value",
-                sectorLabel: {
-                    color: "white",
-                    fontWeight: "bold"
-                },
+                fills: [
+                    'rgba(54, 162, 235, 0.6)', // Protein (blue)
+                    'rgba(255, 99, 132, 0.6)', // Fats (red)
+                    'rgba(255, 206, 86, 0.6)', // Carbs (orange)
+                ],
+                strokes: [
+                    'rgba(54, 162, 235, 0.6)', // Protein (blue)
+                    'rgba(255, 99, 132, 0.6)', // Fats (red)
+                    'rgba(255, 206, 86, 0.6)', // Carbs (orange)
+                ],
             },
         ],
     });
 
-    useEffect(() => {
-        fetchProfile();
-        fetchMacroNutrients();
-        fetchExerciseLogs();
-    }, []);
+    const token = localStorage.getItem('token');
+    const decodedToken = jwtDecode(token);
+    const userId = decodedToken._id;
+    const today = new Date().toISOString().split('T')[0];
 
-    const fetchExerciseLogs = async () => {
+    const convertUnits = (value, fromUnit, toUnit) => {
+        if (fromUnit === "cm" && toUnit === "ft") {
+            const totalInches = parseFloat(value) / 2.54;
+            const feet = Math.floor(totalInches / 12);
+            const inches = Math.round(totalInches % 12);
+            return `${feet}ft ${inches}in`;
+        } else if (fromUnit === "ft" && toUnit === "cm") {
+            return (parseFloat(value) * 30.48).toFixed(2);
+        } else if (fromUnit === "kg" && toUnit === "lbs") {
+            return (parseFloat(value) * 2.20462).toFixed(2);
+        } else if (fromUnit === "lbs" && toUnit === "kg") {
+            return (parseFloat(value) / 2.20462).toFixed(2);
+        }
+        return value;
+    };
+
+    const handleUnitChange = (type, newUnit) => {
+        setUnit((prevUnit) => ({ ...prevUnit, [type]: newUnit }));
+    };
+
+    const fetchProfile = useCallback(async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+            const result = await response.json();
+            if (response.ok) {
+                const userProfile = result.data;
+
+                const convertedWeight =
+                    userProfile.weightUnit === "lbs"
+                        ? convertUnits(userProfile.weight, "lbs", "kg")
+                        : userProfile.weight;
+
+                const convertedHeight =
+                    userProfile.heightUnit === "ft"
+                        ? convertUnits(userProfile.height, "ft", "cm")
+                        : userProfile.height;
+
+                setProfile({
+                    ...userProfile,
+                    weight: parseFloat(convertedWeight),
+                    height: parseFloat(convertedHeight),
+                });
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            console.error("Error fetching profile:", error);
+            setProfile({
+                firstName: "John",
+                lastName: "Doe",
+                sex: "Male",
+                age: 28,
+                height: 175,
+                weight: 70,
+                goal: "Build muscle",
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [token, userId]);
+
+    const fetchExerciseLogs = useCallback(async () => {
         try {
             const response = await fetch(`http://localhost:3001/api/user/get-exercise-logs/${userId}?date=${today}`, {
                 method: 'GET',
@@ -75,9 +140,9 @@ function Dashboard() {
                 { activity: 'Stretching', minutes: 60, calories: 200 },
             ]);
         }
-    };
+    }, [token, today, userId]);
 
-    const fetchMacroNutrients = async () => {
+    const fetchMacroNutrients = useCallback(async () => {
         try {
             const response = await fetch(`http://localhost:3001/api/user/get-macros/${userId}`, {
                 method: 'GET',
@@ -114,42 +179,18 @@ function Dashboard() {
                 data: dummyData,
             }));
         }
-    };
+    }, [token, userId]);
 
-    const fetchProfile = async () => {
-        try {
-            const response = await fetch(`http://localhost:3001/api/user/getUserById/${userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-            const result = await response.json();
-            if (response.ok) {
-                setProfile(result.data);
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error) {
-            console.error("Error fetching profile:", error);
-            setProfile({
-                firstName: "John",
-                lastName: "Doe",
-                sex: "Male",
-                age: 28,
-                height: 175,
-                weight: 70,
-                fitnessGoal: "Build muscle",
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
+    useEffect(() => {
+        fetchProfile();
+        fetchMacroNutrients();
+        fetchExerciseLogs();
+    }, [fetchProfile, fetchMacroNutrients, fetchExerciseLogs]);
 
     return (
         <Box>
             <Container maxW="container.xl" py={5}>
                 <VStack spacing={6}>
-
                     {/* Profile Section */}
                     <Box bg="white" p={6} borderRadius="md" boxShadow="md" w="full">
                         <Heading as="h2" size="lg" mb={4}>
@@ -164,9 +205,39 @@ function Dashboard() {
                                     <Text><strong>Last Name:</strong> {profile.lastName}</Text>
                                     <Text><strong>Sex:</strong> {profile.sex}</Text>
                                     <Text><strong>Age:</strong> {profile.age}</Text>
-                                    <Text><strong>Height:</strong> {profile.height} cm</Text>
-                                    <Text><strong>Weight:</strong> {profile.weight} kg</Text>
-                                    <Text><strong>Fitness Goal:</strong> {profile.fitnessGoal}</Text>
+                                    <Text>
+                                        <strong>Height:</strong>{" "}
+                                        {unit.height === "cm"
+                                            ? `${profile.height} cm`
+                                            : convertUnits(profile.height, "cm", "ft")}
+                                    </Text>
+                                    <Select
+                                        value={unit.height}
+                                        onChange={(e) => handleUnitChange("height", e.target.value)}
+                                        size="sm"
+                                        w="fit-content"
+                                        mt={2}
+                                    >
+                                        <option value="cm">Centimeters</option>
+                                        <option value="ft">Feet/Inches</option>
+                                    </Select>
+                                    <Text>
+                                        <strong>Weight:</strong>{" "}
+                                        {unit.weight === "kg"
+                                            ? `${profile.weight} kg`
+                                            : convertUnits(profile.weight, "kg", "lbs")}
+                                    </Text>
+                                    <Select
+                                        value={unit.weight}
+                                        onChange={(e) => handleUnitChange("weight", e.target.value)}
+                                        size="sm"
+                                        w="fit-content"
+                                        mt={2}
+                                    >
+                                        <option value="kg">Kilograms</option>
+                                        <option value="lbs">Pounds</option>
+                                    </Select>
+                                    <Text><strong>Fitness Goal:</strong> {profile.goal}</Text>
                                 </VStack>
                             )
                         )}

@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { AgCharts } from 'ag-charts-react'
 import NavBar from '../NavBar'
 
+//Display indicidual statistics
 function StatCard({ title, stat, helpText, type, icon }) {
   return (
     <Stat
@@ -60,19 +61,22 @@ function StatCard({ title, stat, helpText, type, icon }) {
   )
 }
 
+//state varialbles
 function AdminHome() {
-  const [userData, setUserData] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [goalData, setGoalData] = useState([])
+  const [userData, setUserData] = useState([])  // User's data
+  const [isLoading, setIsLoading] = useState(true)  //Loading state
+  const [goalData, setGoalData] = useState([])  //Goal data
   const bgColor = useColorModeValue('gray.50', 'gray.800')
   const textColor = useColorModeValue('gray.800', 'white')
   const navigate = useNavigate()
   const toast = useToast()
 
+  // fetch user data 
   useEffect(() => {
     fetchUserData()
   }, [])
 
+  // fetch user data form API 
   const fetchUserData = async () => {
     try {
       const token = localStorage.getItem('token')
@@ -96,6 +100,7 @@ function AdminHome() {
       setIsLoading(false)
 
       // Calculate goal data for chart
+      
       const goals = data.data.reduce((acc, user) => {
         acc[user.goal] = (acc[user.goal] || 0) + 1
         return acc
@@ -114,10 +119,12 @@ function AdminHome() {
     }
   }
 
+  //navigate to user's activity page 
   const onViewClick = (userId) => {
     navigate(`/user-activity/${userId}`)
   }
 
+  //Function to delete a user
   const onDeleteClick = async (userId) => {
     try {
       console.log(userId);
@@ -154,6 +161,8 @@ function AdminHome() {
     }
   }
 
+
+  //chart for user goal distribution
   const chartOptions = {
     title: {
       text: 'User Goals Distribution',
@@ -168,6 +177,7 @@ function AdminHome() {
       cornerRadius: 10,
     }],
   }
+  
 
   return (
     <Box minH="100vh" bg={bgColor}>
@@ -175,8 +185,7 @@ function AdminHome() {
       <Container maxW="container.xl" py={5}>
         <Heading as="h1" size="xl" mb={6} color={textColor}>
           Admin Dashboard
-        </Heading>
-
+        </Heading> 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={{ base: 5, lg: 8 }}>
           <StatCard
             title={'Total Users'}
