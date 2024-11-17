@@ -13,4 +13,7 @@ router.get('/get-meals/:userId', protect, mealsController.getMealsByDate);
 // Route to update or delete a meal item by mealId
 router.put('/update-meal/:mealId', protect, mealsController.updateMeal);
 
+// Route to get meals by userId for a specific user
+router.get('/get-all-meals/:userId', protect, mealsController.getAllMealByUser);
+
 module.exports = router;
