@@ -17,14 +17,13 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom'
 
 function TwoFactorAuth() {
-  const [code, setCode] = useState('')  //Stores te OTP code 
-  const [isLoading, setIsLoading] = useState(false) //loading state 
-  const [timeLeft, setTimeLeft] = useState(30) //countdoen for resend code 
+  const [code, setCode] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [timeLeft, setTimeLeft] = useState(30)
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
 
-  //check for email entry 
   const email = location.state?.email || ''
 
   useEffect(() => {
@@ -40,15 +39,13 @@ function TwoFactorAuth() {
     }
   }, [email, navigate, toast])
 
-  //handling dountdown timer for resend code 
   useEffect(() => {
     if (timeLeft > 0) {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timerId) //clearing timer 
+      return () => clearTimeout(timerId)
     }
   }, [timeLeft])
 
-  //form submission 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
@@ -89,7 +86,6 @@ function TwoFactorAuth() {
     }
   }
 
-  //function for resending OTP 
   const handleResendCode = async () => {
     setTimeLeft(30)
     try {
