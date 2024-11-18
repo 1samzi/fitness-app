@@ -25,7 +25,7 @@ cd fitness-app/backend
 
 
 ```shellscript
- npm installnpm install
+ npm install
 
 ```
 
@@ -33,15 +33,14 @@ cd fitness-app/backend
 
 
 ```shellscript
- MONGODB_URI=your_mongodb_connection_stringMONGODB_URI=your_mongodb_connection_string
-
+ MONGODB_URI=your_mongodb_connection_string
 ```
 
 4. Start the backend server
 
 
 ```shellscript
- npm startnpm start
+ npm start
 
 ```
 
@@ -55,7 +54,7 @@ Note: Two files have already been created in the backend folder. Please follow t
 
 
 ```shellscript
- cd ../frontendcd ../frontend
+ cd ../frontend
 
 ```
 
@@ -63,7 +62,7 @@ Note: Two files have already been created in the backend folder. Please follow t
 
 
 ```shellscript
- npm installnpm install
+ npm install
 
 ```
 
@@ -71,7 +70,7 @@ Note: Two files have already been created in the backend folder. Please follow t
 
 
 ```shellscript
- npm startnpm start
+ npm start
 
 ```
 
