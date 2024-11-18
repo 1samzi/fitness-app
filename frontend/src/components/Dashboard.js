@@ -373,7 +373,7 @@ function Dashboard() {
                     {/* Daily Macronutrient Pie Chart */}
                     <Box bg="white" p={6} borderRadius="md" boxShadow="md" w="full">
                         <Heading as="h2" size="lg" mb={4}>
-                            Daily Macronutrient Distribution
+                            Today's Macronutrient Distribution
                         </Heading>
                         <Box width="100%" maxWidth="auto" margin="0 auto">
                             <AgCharts options={dailyChartOptions} />
