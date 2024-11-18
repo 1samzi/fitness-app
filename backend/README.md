@@ -46,6 +46,8 @@ mongoUrl="mongodb://localhost:27017/"
 PORT=3001
 JWT_SECRET='F!tN($$^pP'
 EMAIL_SERVICE='gmail'
+EMAIL_USER=softwareproject476@gmail.com
+EMAIL_PASS=glvo npey utbf zljx
 ```
 
 
