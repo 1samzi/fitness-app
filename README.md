@@ -96,7 +96,7 @@ To create an admin user through Postman, follow these steps:
 
 ```json
  {
-    "email": "softwareproject476@gmail.com", //Enter your eamil, when you login you will need otp that send to your eamil
+    "email": "softwareproject476@gmail.com", //Enter your email, when you login you will need otp that send to your email
     "password": "Test@123",
     "userType": "admin"
 }
